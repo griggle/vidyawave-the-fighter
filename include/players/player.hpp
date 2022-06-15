@@ -42,6 +42,7 @@ class Player
 
     float jump_height = 50;
     float walk_speed  = 10;
+    float reverse_walk_speed = 5;
 
     float v_x     = 0;
     float v_y     = 0;    // velocity in x and y

@@ -1,6 +1,9 @@
 #include "scenes/game_scene.hpp"
 
-GameScene::GameScene (int width, int height) : Scene (width, height), ground_y (height * 0.8) {}
+GameScene::GameScene (int width, int height)
+    : Scene (width, height), ground_y (height * 0.8)
+{
+}
 
 bool GameScene::init (SDL_Renderer * renderer)
 {
@@ -221,7 +224,8 @@ void GameScene::step_scene ()
             if (rect_intersect (hitbox, hurtbox))
             {
                 players.at (1).health -= players.at (0).current_move_damage;
-                //std::cout << "p1 hit p2 for " << players.at (0).current_move_damage << " damage, new health of p2 is "
+                // std::cout << "p1 hit p2 for " << players.at (0).current_move_damage << " damage, new health of p2 is
+                // "
                 //          << players.at (1).health << "\n";
                 players.at (0).current_move_damage = 0;
                 hit                                = true;
@@ -242,7 +246,7 @@ void GameScene::step_scene ()
             // if there is a hit
             if (SDL_IntersectRect (&hitbox, &hurtbox, NULL))
             {
-                //std::cout << "p2 hit p1 for "
+                // std::cout << "p2 hit p1 for "
                 //          << "\n";
                 players.at (0).health -= players.at (1).current_move_damage;
                 players.at (1).current_move_damage = 0;

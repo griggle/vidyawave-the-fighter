@@ -26,6 +26,9 @@ __pycache__/
 # outputs
 out
 
+# temp files
+*.png~
+
 # Distribution / packaging
 .Python
 build/

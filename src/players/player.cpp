@@ -13,6 +13,9 @@ Player::Player (float floor) : floor (floor), y (floor)
     // neutral
     state_hurtboxes.push_back ({{SDL_Rect {(int) (-58.0), (int) (-443), (int) 101, (int) 102},
                                  SDL_Rect {(int) (-73.0), (int) (-358), (int) 106, (int) 187},
+                                 SDL_Rect {(int) (-60.0), (int) (-164), (int) 71, (int) 163}},
+                                {SDL_Rect {(int) (-58.0), (int) (-433), (int) 101, (int) 102},
+                                 SDL_Rect {(int) (-73.0), (int) (-358), (int) 106, (int) 187},
                                  SDL_Rect {(int) (-60.0), (int) (-164), (int) 71, (int) 163}}});
     state_hitboxes.push_back ({{}});
 
@@ -84,16 +87,16 @@ void Player::update_movement ()
         case 0b0010:
             if (!is_airborne () && current_move == 0)
             {
-                x -= walk_speed;
-                updated_state = 4;
+                x -= is_left ? walk_speed : reverse_walk_speed;
+                updated_state = is_left ? 3 : 4;
             }
             break;
         case 0b1101:
         case 0b0001:
             if (!is_airborne () && current_move == 0)
             {
-                x += walk_speed;
-                updated_state = 3;
+                x += is_left ? reverse_walk_speed : walk_speed;
+                updated_state = is_left ? 4 : 3;
             }
             break;
     }
@@ -286,12 +289,14 @@ void Player::apply_force (float dx, float dy)
 
 void Player::load_textures (SDL_Renderer * renderer)
 {
-    textures.push_back ({IMG_LoadTexture (renderer, "res/debug/debug_neutral.png")});
+    textures.push_back ({IMG_LoadTexture (renderer, "res/debug/debug_neutral.png"),
+                         IMG_LoadTexture (renderer, "res/debug/debug_neutral1.png"),
+                         IMG_LoadTexture (renderer, "res/debug/debug_neutral2.png"),
+                         IMG_LoadTexture (renderer, "res/debug/debug_neutral3.png")});
     textures.push_back ({IMG_LoadTexture (renderer, "res/debug/debug_crouch.png")});
     textures.push_back ({IMG_LoadTexture (renderer, "res/debug/debug_airborne.png")});
     textures.push_back ({IMG_LoadTexture (renderer, "res/debug/debug_walking_forwards.png"),
-                         IMG_LoadTexture (renderer, "res/debug/debug_walking_forwards1.png"),
-                         IMG_LoadTexture (renderer, "res/debug/debug_walking_forwards2.png")});
+                         IMG_LoadTexture (renderer, "res/debug/debug_walking_forwards1.png")});
     textures.push_back ({IMG_LoadTexture (renderer, "res/debug/debug_walking_backwards.png"),
                          IMG_LoadTexture (renderer, "res/debug/debug_walking_backwards1.png"),
                          IMG_LoadTexture (renderer, "res/debug/debug_walking_backwards2.png")});
