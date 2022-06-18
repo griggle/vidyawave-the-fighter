@@ -95,7 +95,7 @@ bool Canvas::init ()
         }
 
         // Create window
-        gWindow = SDL_CreateWindow ("Vidya-Wave, the Fighter", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
+        gWindow = SDL_CreateWindow ("Vidyawave, the Fighter", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                                     SDL_WINDOW_SHOWN);
         if (gWindow == NULL)
         {
@@ -128,6 +128,12 @@ bool Canvas::init ()
             }
         }
     }
+
+    SDL_RenderSetScale (gRenderer, width / 1920.0, height / 1080.0);
+    SDL_SetRenderDrawBlendMode (gRenderer, SDL_BLENDMODE_BLEND);
+
+    width = 1920;
+    height = 1080;
 
     return success;
 }

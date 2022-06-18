@@ -7,9 +7,9 @@ int main (int argc, char * args[])
 {
     std::cout << "launched\n";
 
-    std::string mode = "";
+    //std::string mode = "";
 
-    std::cin >> mode;
+    //std::cin >> mode;
 
     const int width  = 1920;
     const int height = 1080;
@@ -17,7 +17,7 @@ int main (int argc, char * args[])
     Canvas canvas (width, height);
 
     canvas.init ();
-    canvas.set_scene (new GameScene (width, height));
+    canvas.set_scene (new GameScene(1920, 1080));
 
     while (!canvas.step ()) {}
 

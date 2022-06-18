@@ -1,13 +1,45 @@
 #pragma once
 
+#include "SDL.h"
+#include "tools/json.hpp"
 #include "tools/sdl_image_tools.hpp"
 
-#include <SDL.h>
 #include <bitset>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
+
+// // MOVEMENT
+// Movement state indexes
+constexpr int NEUTRAL_STATE   = 0;
+constexpr int CROUCHING_STATE = 1;
+constexpr int AIRBORNE_STATE  = 2;
+// Transitional states
+constexpr int WALK_FORWARD_STATE      = 3;
+constexpr int WALK_BACKWARD_STATE     = 4;
+constexpr int NEUTRAL_TO_CROUCH_STATE = 5;
+constexpr int NEUTRAL_TO_AIR_STATE    = 6;
+constexpr int CROUCH_TO_NEUTRAL_STATE = 7;
+
+// // MOVES
+constexpr int MOVE_FIRST_STATE = 8;
+// Neutral move indexes
+constexpr int MOVE_A_STATE = 8;
+constexpr int MOVE_B_STATE = 9;
+constexpr int MOVE_C_STATE = 10;
+constexpr int MOVE_D_STATE = 11;
+
+struct MoveInfo
+{
+    int damage;
+
+    int startup;
+    int active;
+    int recovery;
+};
 
 class Player
 {
@@ -23,25 +55,23 @@ class Player
     std::vector<SDL_Rect> hitboxes;
     std::vector<SDL_Rect> hurtboxes;
 
-    SDL_Rect      render_area;
+    SDL_Rect      src_area;    // area on texture to blit from
+    SDL_Rect      dst_area;    // area on screen to blit to
     SDL_Texture * texture = NULL;
 
-    int current_move          = 0;    // index of current move, 0 if none
-    int current_move_priority = 0;    // 0 = normal, 1 = directional, 2 = special, 3 = super
-    int current_move_startup  = 0;    // startup time of current move
-    int current_move_duration = 0;    // open time of current move
-    int current_move_recovery = 0;    // recovery time of current move
-    int current_move_damage   = 0;    // damage of current move
+    MoveInfo move;
 
   protected:
-    unsigned short counter;    // frame counter for animations
-    float          floor;      // lowest y level
+    float frame_counter = 0;    // frame counter for animations
+    int   counter       = 0;    // counter for transitions and moves
 
-    float texture_height = 600;
-    float texture_width  = 500;
+    float floor_level;    // lowest y level
 
-    float jump_height = 50;
-    float walk_speed  = 10;
+    int texture_height = 600;
+    int texture_width  = 500;
+
+    float jump_height        = 50;
+    float walk_speed         = 10;
     float reverse_walk_speed = 5;
 
     float v_x     = 0;
@@ -54,23 +84,18 @@ class Player
     std::vector<unsigned int> button_input_history;
     unsigned int              button_current_input = 0;
 
-    bool just_jumped = false;    // if just jumped (used to stop constant jumping on holding up)
+    bool can_jump = true;    // resets on being on the ground in neutral (used to stop constant jumping on holding up)
+    int  jump_direction = 0;    // -1 left, 0 up, 1 right
 
-    // 0 - neutral
-    // 1 - crouching
-    // 2 - airborne
-    // 3 - walking forwards
-    // 4 - walking backwards
-    // 5 - move
+    int state = NEUTRAL_STATE;
 
-    int current_state = 0;
-
-    std::vector<std::vector<SDL_Texture *>> textures;
+    std::vector<int> animation_frame_counts;
 
     // only store x offset, y offset, width, and height
-    std::vector<std::vector<SDL_Rect>>              render_areas;       // texture sizes
     std::vector<std::vector<std::vector<SDL_Rect>>> state_hurtboxes;    // all hurtbox vector values for each state
     std::vector<std::vector<std::vector<SDL_Rect>>> state_hitboxes;     // all hurtbox vector values for each state
+
+    std::vector<MoveInfo> moves;
 
   public:
     Player (float floor);
@@ -88,13 +113,11 @@ class Player
     inline bool is_airborne ();
 
   protected:
-    void apply_force (float dx, float dy);
-
-    void update_movement ();
+    void update_state ();
+    void update_moves ();
     void update_physics ();
     void update_hitboxes ();
     void update_textures ();
-    void update_current_move ();
 
     inline bool input_up (unsigned int input);
     inline bool input_down (unsigned int input);

@@ -1,9 +1,6 @@
 #include "scenes/game_scene.hpp"
 
-GameScene::GameScene (int width, int height)
-    : Scene (width, height), ground_y (height * 0.8)
-{
-}
+GameScene::GameScene (int width, int height) : Scene (width, height), ground_y (height * 0.8) {}
 
 bool GameScene::init (SDL_Renderer * renderer)
 {
@@ -38,6 +35,10 @@ bool GameScene::step_event (SDL_Event & e)
                 case SDLK_LEFT: players.at (1).directional_input (0, 0, 1, 0); break;
                 case SDLK_d:
                 case SDLK_RIGHT: players.at (1).directional_input (0, 0, 0, 1); break;
+                case SDLK_j: players.at (1).button_input (0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;            // x
+                case SDLK_k: players.at (1).button_input (0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;            // x
+                case SDLK_l: players.at (1).button_input (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;            // x
+                case SDLK_SEMICOLON: players.at (1).button_input (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;    // x
             }
             break;
         case SDL_KEYUP:
@@ -52,6 +53,12 @@ bool GameScene::step_event (SDL_Event & e)
                 case SDLK_LEFT: players.at (1).directional_input (0, 0, -1, 0); break;
                 case SDLK_d:
                 case SDLK_RIGHT: players.at (1).directional_input (0, 0, 0, -1); break;
+                case SDLK_j: players.at (1).button_input (0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;    // x
+                case SDLK_k: players.at (1).button_input (0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;    // x
+                case SDLK_l: players.at (1).button_input (0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;    // x
+                case SDLK_SEMICOLON:
+                    players.at (1).button_input (0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                    break;    // x
             }
             break;
         case SDL_JOYBUTTONDOWN:
@@ -211,7 +218,7 @@ void GameScene::step_scene ()
         players[0].is_left = false;
     }
 
-    // // hit detection
+    //// // hit detection
 
     bool hit = false;
 
@@ -223,12 +230,12 @@ void GameScene::step_scene ()
             // if there is a hit
             if (rect_intersect (hitbox, hurtbox))
             {
-                players.at (1).health -= players.at (0).current_move_damage;
-                // std::cout << "p1 hit p2 for " << players.at (0).current_move_damage << " damage, new health of p2 is
-                // "
-                //          << players.at (1).health << "\n";
-                players.at (0).current_move_damage = 0;
-                hit                                = true;
+                players.at (1).health -= players.at (0).move.damage;
+                /*std::cout << "p1 hit p2 for " << players.at (0).move.damage
+                          << " damage, new health of p2 is"
+                          << players.at (1).health << "\n";*/
+                players.at (0).move.damage = 0;
+                hit                        = true;
             }
 
             if (hit) break;
@@ -244,13 +251,13 @@ void GameScene::step_scene ()
         for (auto & hurtbox : players[0].hurtboxes)
         {
             // if there is a hit
-            if (SDL_IntersectRect (&hitbox, &hurtbox, NULL))
+            if (rect_intersect (hitbox, hurtbox))
             {
-                // std::cout << "p2 hit p1 for "
-                //          << "\n";
-                players.at (0).health -= players.at (1).current_move_damage;
-                players.at (1).current_move_damage = 0;
-                hit                                = true;
+                /*std::cout << "p2 hit p1 for "
+                          << "\n";*/
+                players.at (0).health -= players.at (1).move.damage;
+                players.at (1).move.damage = 0;
+                hit                        = true;
             }
             if (hit) break;
         }
@@ -266,7 +273,7 @@ void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int &
         // // Player
         SDL_RendererFlip flip = {};
         if (player.is_left) flip = SDL_FLIP_HORIZONTAL;
-        SDL_RenderCopyEx (renderer, player.texture, NULL, &player.render_area, 0, NULL, flip);
+        SDL_RenderCopyEx (renderer, player.texture, &player.src_area, &player.dst_area, 0, NULL, flip);
 
         // // Debug lines
         // floor
@@ -279,12 +286,12 @@ void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int &
         SDL_RenderDrawLine (renderer, player.x, player.y + 10, player.x, player.y - 10);
 
         // player hurtboxes
-        SDL_SetRenderDrawColor (renderer, 0, 180, 0, 0xFF);
-        for (auto & hurtbox : player.hurtboxes) { SDL_RenderDrawRect (renderer, &hurtbox); }
+        SDL_SetRenderDrawColor (renderer, 0, 180, 0, 80);
+        for (auto & hurtbox : player.hurtboxes) { SDL_RenderFillRect (renderer, &hurtbox); }
 
         // player hitboxes
-        SDL_SetRenderDrawColor (renderer, 180, 0, 0, 0xFF);
-        for (auto & hitbox : player.hitboxes) { SDL_RenderDrawRect (renderer, &hitbox); }
+        SDL_SetRenderDrawColor (renderer, 180, 0, 0, 120);
+        for (auto & hitbox : player.hitboxes) { SDL_RenderFillRect (renderer, &hitbox); }
     }
 
     // draw UI
