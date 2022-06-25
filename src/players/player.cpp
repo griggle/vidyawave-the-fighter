@@ -1,466 +1,685 @@
 #include "players/player.hpp"
 
-Player::Player (float floor) : floor_level (floor), y (floor)
+Player::Player (bool is_lefthand_player) : is_lefthand_player (is_lefthand_player)
 {
-    for (int i = 0; i < 64; i++) directional_input_history.push_back (0);
-    for (int i = 0; i < 64; i++) button_input_history.push_back (0);
-
-    dst_area = SDL_Rect {(int) (x - (texture_width / 2)), (int) (y - texture_height), (int) texture_width,
-                         (int) texture_height};
-
-    // hurtboxes
-    std::ifstream hiurt_stream ("res/config/debug/hiurtboxes.json");
-
-    auto hiurtboxes = nlohmann::json::parse (hiurt_stream);
-
-    hiurt_stream.close ();
-
-    for (auto & state : hiurtboxes.at ("hurtboxes"))
-    {
-        std::vector<std::vector<SDL_Rect>> this_state;
-        for (auto & frame : state)
-        {
-            std::vector<SDL_Rect> this_frame;
-            for (auto & hiurtbox : frame)
-            {
-                std::vector<int> temp;
-
-                for (auto & val : hiurtbox) temp.push_back ((int) val);
-
-                this_frame.push_back (SDL_Rect {temp.at (0), temp.at (1), temp.at (2), temp.at (3)});
-            }
-            this_state.push_back (this_frame);
-        }
-        state_hurtboxes.push_back (this_state);
-    }
-
-    for (auto & state : hiurtboxes.at ("hitboxes"))
-    {
-        std::vector<std::vector<SDL_Rect>> this_state;
-        for (auto & frame : state)
-        {
-            std::vector<SDL_Rect> this_frame;
-            for (auto & hiurtbox : frame)
-            {
-                std::vector<int> temp;
-
-                for (auto & val : hiurtbox) temp.push_back ((int) val);
-
-                this_frame.push_back (SDL_Rect {temp.at (0), temp.at (1), temp.at (2), temp.at (3)});
-            }
-            this_state.push_back (this_frame);
-        }
-        state_hitboxes.push_back (this_state);
-    }
-
-    // Frame counts for each state animation
-    for (auto & state : state_hurtboxes) { animation_frame_counts.push_back (state.size ()); }
-    // animation_frame_counts = {11, 10, 1, 2, 2, 4, 5, 4, 11};
-
-    // Move info
-    moves.push_back ({10, 2, 6, 3});    // neutral a
-}
-
-void Player::update_state ()
-{
-    // if we are in a move, it is in control of states. See update_moves().
-    if (state >= MOVE_FIRST_STATE) return;
-
-    int new_state = is_airborne () ? AIRBORNE_STATE : NEUTRAL_STATE;
-
-    // update with inputs
-    switch (directional_current_input)
-    {
-        // no input
-        case 0b0000:
-        case 0b0011:
-        case 0b1100:
-        case 0b1111:
-            switch (state)
-            {
-                case NEUTRAL_STATE: can_jump = true; break;
-                case CROUCHING_STATE:
-                    can_jump  = true;
-                    new_state = CROUCH_TO_NEUTRAL_STATE;
-                    break;
-                case AIRBORNE_STATE: break;
-                case WALK_FORWARD_STATE:
-                case WALK_BACKWARD_STATE: new_state = NEUTRAL_STATE; break;
-                default: break;
-            }
-            break;
-
-        // jumping
-        // up
-        case 0b1011:
-        case 0b1000:
-            switch (state)
-            {
-                case NEUTRAL_STATE:
-                case WALK_FORWARD_STATE:
-                case WALK_BACKWARD_STATE:
-                    if (can_jump)
-                    {
-                        new_state      = NEUTRAL_TO_AIR_STATE;
-                        jump_direction = 0;
-                        can_jump       = false;
-                    }
-                    break;
-                default: break;
-            }
-            break;
-        // up left
-        case 0b1010:
-            switch (state)
-            {
-                case NEUTRAL_STATE:
-                case WALK_FORWARD_STATE:
-                case WALK_BACKWARD_STATE:
-                    if (can_jump)
-                    {
-                        new_state      = NEUTRAL_TO_AIR_STATE;
-                        jump_direction = -1;
-                        can_jump       = false;
-                    }
-                    break;
-                default: break;
-            }
-            break;
-        // up right
-        case 0b1001:
-            switch (state)
-            {
-                case NEUTRAL_STATE:
-                case WALK_FORWARD_STATE:
-                case WALK_BACKWARD_STATE:
-                    if (can_jump)
-                    {
-                        new_state      = NEUTRAL_TO_AIR_STATE;
-                        jump_direction = 1;
-                        can_jump       = false;
-                    }
-                    break;
-                default: break;
-            }
-            break;
-
-        // crouched
-        case 0b0100:
-        case 0b0111:
-        case 0b0110:
-        case 0b0101:
-            switch (state)
-            {
-                case 0: new_state = NEUTRAL_TO_CROUCH_STATE; break;
-                case 1: new_state = CROUCHING_STATE; break;
-                case 2: break;
-                case 3:
-                case 4: new_state = NEUTRAL_TO_CROUCH_STATE; break;
-                default: break;
-            }
-            break;
-
-        // walking
-        // left
-        case 0b1110:
-        case 0b0010:
-            switch (state)
-            {
-                case NEUTRAL_STATE:
-                case WALK_FORWARD_STATE:
-                case WALK_BACKWARD_STATE:
-                    new_state = is_left ? WALK_FORWARD_STATE : WALK_BACKWARD_STATE;
-                    x = std::max (100.0f, (x - (is_left ? walk_speed : reverse_walk_speed)));
-                    break;
-                default: break;
-            }
-            break;
-        // right
-        case 0b1101:
-        case 0b0001:
-            switch (state)
-            {
-                case NEUTRAL_STATE:
-                case WALK_FORWARD_STATE:
-                case WALK_BACKWARD_STATE:
-                    new_state = is_left ? WALK_BACKWARD_STATE : WALK_FORWARD_STATE;
-                    x         = std::min (1920.f - 100, x + (is_left ? reverse_walk_speed : walk_speed));
-                    break;
-                default: break;
-            }
-            break;
-    }
-
-    // step transitional states
-    switch (state)
-    {
-        case NEUTRAL_TO_CROUCH_STATE:
-            if (counter >= 3)
-                new_state = CROUCHING_STATE;
-            else
-            {
-                new_state = NEUTRAL_TO_CROUCH_STATE;
-                counter++;
-            }
-            break;
-        case NEUTRAL_TO_AIR_STATE:
-            if (counter >= 6)
-            {
-                new_state = AIRBORNE_STATE;
-                v_y       = jump_height;
-                v_x       = jump_direction * walk_speed;
-            }
-            else
-            {
-                new_state = NEUTRAL_TO_AIR_STATE;
-                counter++;
-            }
-            break;
-        case CROUCH_TO_NEUTRAL_STATE:
-            if (counter >= 3)
-                new_state = NEUTRAL_STATE;
-            else
-            {
-                new_state = CROUCH_TO_NEUTRAL_STATE;
-                counter++;
-            }
-            break;
-
-        default: break;
-    }
-
-    // set new state and reset state counter
-    if (new_state != state)
-    {
-        state   = new_state;
-        counter = 0;
-    }
-}
-
-void Player::update_moves ()
-{
-    // see if we are in a move
-    if (state < MOVE_FIRST_STATE) return;
-
-    switch (MOVE_FIRST_STATE)
-    {
-        case MOVE_A_STATE:
-            if (counter == 0) { move = moves[MOVE_A_STATE - MOVE_FIRST_STATE]; }
-            else if (counter < move.startup)
-            {
-                // startup
-            }
-            else if (counter < move.startup + move.active)
-            {
-            }
-            else if (counter < move.startup + move.active + move.recovery)
-            {
-                // recovery
-            }
-            else if (counter >= move.startup + move.active + move.recovery)
-            {
-                // quit
-                state   = NEUTRAL_STATE;
-                counter = 0;
-            }
-
-            counter++;
-            break;
-    }
-}
-
-void Player::update_physics ()
-{
-    x += v_x;
-    y -= v_y;
-
-    v_y -= gravity;
-
-    if ((abs (floor_level - round (y)) <= 0.01) || y > floor_level)
-    {
-        y   = floor_level;
-        v_x = 0;
-        v_y = 0;
-    }
-}
-
-void Player::update_hitboxes ()
-{
-    if (state > 4)
-    {
-        hurtboxes = state_hurtboxes[state][((int) floor (counter)) % state_hurtboxes[state].size ()];
-        hitboxes  = state_hitboxes[state][((int) floor (counter)) % state_hitboxes[state].size ()];
-    }
-    else
-    {
-        hurtboxes = state_hurtboxes[state][((int) floor (frame_counter * 0.1)) % state_hurtboxes[state].size ()];
-        hitboxes  = state_hitboxes[state][((int) floor (frame_counter * 0.1)) % state_hitboxes[state].size ()];
-    }
-
-    if (is_left)
-    {
-        for (int i = 0; i < hurtboxes.size (); i++)
-        {
-            hurtboxes.at (i).x = -hurtboxes.at (i).x;
-            hurtboxes.at (i).w = -hurtboxes.at (i).w;
-        }
-
-        for (int i = 0; i < hitboxes.size (); i++)
-        {
-            hitboxes.at (i).x = -hitboxes.at (i).x;
-            hitboxes.at (i).w = -hitboxes.at (i).w;
-        }
-    }
-
-    for (int i = 0; i < hurtboxes.size (); i++)
-    {
-        hurtboxes.at (i).x = hurtboxes.at (i).x + x;
-        hurtboxes.at (i).y = hurtboxes.at (i).y + y;
-    }
-
-    for (int i = 0; i < hitboxes.size (); i++)
-    {
-        hitboxes.at (i).x = hitboxes.at (i).x + x;
-        hitboxes.at (i).y = hitboxes.at (i).y + y;
-    }
-}
-
-void Player::update_textures ()
-{
-    if (state > 4)
-    {
-        // use new texture each frame (60 fps) for transitions and moves
-        src_area.x = texture_width * (((int) floor (counter)) % animation_frame_counts[state]);
-        src_area.y = texture_height * state;
-    }
-    else
-    {
-        // use global frame counter (6 fps) for idle animations
-        src_area.x = texture_width * (((int) floor (frame_counter * 0.1)) % animation_frame_counts[state]);
-        src_area.y = texture_height * state;
-    }
-
-    dst_area.x = (int) (x - (dst_area.w / 2));
-    dst_area.y = (int) (y - dst_area.h);
-
-    frame_counter++;
-}
-
-void Player::directional_input (int up, int down, int left, int right)
-{
-    if (up == 1) directional_current_input |= 0b1000;
-    if (down == 1) directional_current_input |= 0b0100;
-    if (left == 1) directional_current_input |= 0b0010;
-    if (right == 1) directional_current_input |= 0b0001;
-
-    if (up == -1) directional_current_input &= 0b0111;
-    if (down == -1) directional_current_input &= 0b1011;
-    if (left == -1) directional_current_input &= 0b1101;
-    if (right == -1) directional_current_input &= 0b1110;
-}
-
-void Player::button_input (int x, int circle, int square, int triangle, int select, int logo, int start, int l_stick,
-                           int r_stick, int l_bumper, int r_bumper, int l_trigger, int r_trigger)
-{
-    /*std::cout << "\n\n\n\n\n\n";
-    for (auto entry : button_input_history) std::cout << std::bitset<16> (entry) << "\n";*/
-
-    // process moves ending in square
-    if (square == 1 && !input_square (button_current_input))
-    {
-        if (state == NEUTRAL_STATE)
-        {
-            state   = MOVE_A_STATE;
-            counter = 0;
-        }
-    }
-
-
-    if (x == 1) button_current_input |= 0b1000000000000000;
-    if (circle == 1) button_current_input |= 0b0100000000000000;
-    if (square == 1) button_current_input |= 0b0010000000000000;
-    if (triangle == 1) button_current_input |= 0b0001000000000000;
-    if (select == 1) button_current_input |= 0b0000100000000000;
-    if (logo == 1) button_current_input |= 0b0000010000000000;
-    if (start == 1) button_current_input |= 0b0000001000000000;
-    if (l_stick == 1) button_current_input |= 0b0000000100000000;
-    if (r_stick == 1) button_current_input |= 0b0000000010000000;
-    if (l_bumper == 1) button_current_input |= 0b0000000001000000;
-    if (r_bumper == 1) button_current_input |= 0b0000000000100000;
-    if (l_trigger == 1) button_current_input |= 0b0000000000010000;
-    if (r_trigger == 1) button_current_input |= 0b0000000000001000;
-
-    if (x == -1) button_current_input &= 0b0111111111111111;
-    if (circle == -1) button_current_input &= 0b1011111111111111;
-    if (square == -1) button_current_input &= 0b1101111111111111;
-    if (triangle == -1) button_current_input &= 0b1110111111111111;
-    if (select == -1) button_current_input &= 0b1111011111111111;
-    if (logo == -1) button_current_input &= 0b1111101111111111;
-    if (start == -1) button_current_input &= 0b1111110111111111;
-    if (l_stick == -1) button_current_input &= 0b1111111011111111;
-    if (r_stick == -1) button_current_input &= 0b1111111101111111;
-    if (l_bumper == -1) button_current_input &= 0b1111111110111111;
-    if (r_bumper == -1) button_current_input &= 0b1111111111011111;
-    if (l_trigger == -1) button_current_input &= 0b1111111111101111;
-    if (r_trigger == -1) button_current_input &= 0b1111111111110111;
+    collision = SDL_Rect {is_lefthand_player ? 1000 : -1000, 0, 100, 300};
 }
 
 void Player::load_textures (SDL_Renderer * renderer)
 {
-    texture = IMG_LoadTexture (renderer, "res/atlas/debug.png");
+    std::string              path_base = "res/characters/john_debug/animations/";
+    std::vector<std::string> states    = {
+        "neutral",
+        "crouching",
+        "airborne",
 
-    src_area = SDL_Rect {0, 0, texture_width, texture_height};
+        "walk_forward",
+        "walk_backward",
+        "sprint",
+        "backdash",
+
+        "block_neutral",
+        "block_crouch",
+        "block_air",
+        "grabbed",
+        "stun_neutral",
+        "stun_crouch",
+        "stun_air",
+        "knocked_down",
+
+        "neutral_to_crouch",
+        "neutral_to_air",
+        "neutral_to_forward_air",
+        "neutral_to_backward_air",
+        "crouch_to_neutral",
+
+        "a",
+        "b",
+        "c",
+        "c_grab",
+        "d",
+    };
+
+    for (int i = 0; i < states.size (); i++)
+        animations.push_back (HitAnimation (path_base + states.at (i) + ".atlas",
+                                            path_base + states.at (i) + ".hurtboxes",
+                                            path_base + states.at (i) + ".hitboxes"));
+
+
+    for (auto & animation : animations) animation.load_texture (renderer);
+
     dst_area = SDL_Rect {0, 0, texture_width, texture_height};
 }
 
 void Player::close_textures ()
 {
-    // Free loaded images
+    for (auto & animation : animations) animation.close_texture ();
 
-    SDL_DestroyTexture (texture);
     texture = NULL;
 }
 
 void Player::update ()
 {
-    directional_input_history.insert (directional_input_history.begin (), directional_current_input);
-    directional_input_history.pop_back ();
-
-    button_input_history.insert (button_input_history.begin (), button_current_input);
-    button_input_history.pop_back ();
+    if (!had_input_this_frame) input_history.push (input_history.at (0));
 
     update_state ();
-    update_moves ();
-    update_physics ();
+
+    if (state != GRABBED)
+    {
+        update_physics ();
+        update_collision ();
+    }
+
     update_hitboxes ();
-    update_textures ();
+
+    frame_counter++;
+    had_input_this_frame = false;
+
+    dst_area.x = x - (texture_width / 2);
+    dst_area.y = y - texture_height;
+
+    i_frames = std::max (0, i_frames - 1);
+
+    
+
+    // std::cout << std::bitset<32> (input_history.at (0)) << "\n";
 }
 
-bool Player::is_crouched () { return !is_airborne () && input_down (directional_current_input) && state != 3; }
-
-bool Player::is_blocking ()
+void Player::input (unsigned long button, bool state)
 {
-    // todo: make this change depending on which side you're on
-    return input_left (directional_current_input);
+    if (state == PRESSED)
+    {
+        if ((input_history.at (0) | button) != (input_history.at (0)))
+            input_history.push (input_history.at (0) | button);
+    }
+    else
+        input_history.push (input_history.at (0) & (~button));
+
+    had_input_this_frame = true;
 }
 
-bool Player::is_airborne () { return y < floor_level; }
+void Player::hit (Move move)
+{
+    // check if blocking
+    if (is_pressed (is_lefthand_player ? LEFT : RIGHT) && state < TRANSITION_FIRST_STATE && !move.is_grab)
+    {
+        if (((state == CROUCHING || state == BLOCK_CROUCH) && move.type != HIGH)
+            || ((state != CROUCHING && state != BLOCK_CROUCH) && move.type != LOW))
+        {
+            switch (state)
+            {
+                case CROUCHING:
+                case BLOCK_CROUCH: state = BLOCK_CROUCH; break;
+                case AIRBORNE:
+                case BLOCK_AIR: state = BLOCK_AIR; break;
+                case BLOCK_NEUTRAL:
+                default: state = BLOCK_NEUTRAL; break;
+            }
 
-bool Player::input_up (unsigned int input) { return (input & 0b1000) >> 3 && !((input & 0b0100) >> 2); }
-bool Player::input_down (unsigned int input) { return (input & 0b0100) >> 2 && !((input & 0b1000) >> 3); }
-bool Player::input_left (unsigned int input) { return ((input & 0b0010) >> 1) && !(input & 0b0001); }
-bool Player::input_right (unsigned int input) { return (input & 0b0001) && !((input & 0b0010) >> 1); }
+            health -= move.damage / 10;
+            v_x += (is_lefthand_player ? -move.knockback_x : move.knockback_x) / 10;
+            v_y += (is_lefthand_player ? -move.knockback_y : move.knockback_y) / 10;
+            counter = 10;
 
-bool Player::input_x (unsigned int input) { return ((input & 0b1000000000000000) >> 15); }
-bool Player::input_circle (unsigned int input) { return ((input & 0b0100000000000000) >> 14); }
-bool Player::input_square (unsigned int input) { return ((input & 0b0010000000000000) >> 13); }
-bool Player::input_triangle (unsigned int input) { return ((input & 0b0001000000000000) >> 12); }
-bool Player::input_select (unsigned int input) { return ((input & 0b0000100000000000) >> 11); }
-bool Player::input_logo (unsigned int input) { return ((input & 0b0000010000000000) >> 10); }
-bool Player::input_start (unsigned int input) { return ((input & 0b0000001000000000) >> 9); }
-bool Player::input_l_stick (unsigned int input) { return ((input & 0b0000000100000000) >> 8); }
-bool Player::input_r_stick (unsigned int input) { return ((input & 0b0000000010000000) >> 7); }
-bool Player::input_l_bumper (unsigned int input) { return ((input & 0b0000000001000000) >> 6); }
-bool Player::input_r_bumper (unsigned int input) { return ((input & 0b0000000000100000) >> 5); }
-bool Player::input_l_trigger (unsigned int input) { return ((input & 0b0000000000010000) >> 4); }
-bool Player::input_r_trigger (unsigned int input) { return ((input & 0b0000000000001000) >> 3); }
+            return;
+        }
+    }
+
+    // check if can be hit
+    if (i_frames == 0)
+    {
+        i_frames = 10;
+
+        health -= move.damage;
+        v_x += is_lefthand_player ? -move.knockback_x : move.knockback_x;
+        v_y += is_lefthand_player ? -move.knockback_y : move.knockback_y;
+
+        if (other_player->move.is_hard_knockdown)
+            state = KNOCKED_DOWN;
+        else if (other_player->move.is_grab)
+            state = GRABBED;
+        else
+            switch (state)
+            {
+                case CROUCHING: state = STUN_CROUCH; break;
+                case AIRBORNE: state = STUN_AIR; break;
+                default: state = STUN_NEUTRAL; break;
+            }
+
+        counter = move.stun;
+        if (move.is_grab)
+        {
+            state                  = GRABBED;
+            other_player->grab_hit = true;
+        }
+
+        return;
+    }
+}
+
+void Player::update_state ()
+{
+    update_move_states ();
+
+    // select update function based upon state
+    switch (state)
+    {
+        case NEUTRAL: update_neutral (); break;
+        case CROUCHING: update_crouching (); break;
+        case AIRBORNE: update_airborne (); break;
+
+        case WALK_FORWARD: update_walk_forward (); break;
+        case WALK_BACKWARD: update_walk_backward (); break;
+        case SPRINT: update_sprint (); break;
+        case BACKDASH: update_backdash (); break;
+
+        case BLOCK_NEUTRAL:
+        case BLOCK_CROUCH:
+        case BLOCK_AIR:
+        case STUN_NEUTRAL:
+        case STUN_CROUCH:
+        case STUN_AIR:
+        case KNOCKED_DOWN: update_stun (); break;
+        case GRABBED: update_frame_animation (); break;
+
+        case NEUTRAL_TO_CROUCH: update_neutral_to_crouch (); break;
+        case NEUTRAL_TO_AIR: update_neutral_to_air (); break;
+        case NEUTRAL_TO_FORWARD_AIR: update_neutral_to_forward_air (); break;
+        case NEUTRAL_TO_BACKWARD_AIR: update_neutral_to_backward_air (); break;
+        case CROUCH_TO_NEUTRAL: update_crouch_to_neutral (); break;
+
+        case MOVE_A: update_standard_move (); break;
+        case MOVE_B: update_standard_move (); break;
+        case MOVE_C: update_standard_move (); break;
+        case MOVE_C_GRAB: update_grab (); break;
+        case MOVE_D: update_standard_move (); break;
+    }
+
+    std::cout << state << "\r";
+}
+
+void Player::update_physics ()
+{
+    // apply gravity and momentum to the player
+    x += v_x;
+    y += -v_y;
+
+    v_y -= gravity;
+
+
+    // todo: change this from hardcoded floor
+    if (y >= ground)
+    {
+        y = ground;
+        v_x *= 1 - friction;
+        v_y = 0;
+    }
+}
+
+void Player::update_move_states ()
+{
+    // grabs cannot be overidden
+    if (state == GRABBED) return;
+
+    // check for normal moves
+    // only override movement
+    if (state < MOVE_FIRST_STATE)
+    {
+        if (is_pressed (A) && !is_pressed (A, input_history.at (1)))
+        {
+            switch (state)
+            {
+                case CROUCHING: break;    // c. a
+                case AIRBORNE: break;     // j. a
+                default:
+                    move  = Move {10, 10, 0, 10, 10, false, false, MID, NEUTRAL};
+                    state = MOVE_A;
+                    break;    // a
+            }
+        }
+
+        if (is_pressed (B) && !is_pressed (B, input_history.at (1)))
+        {
+            switch (state)
+            {
+                case CROUCHING: break;    // c. b
+                case AIRBORNE: break;     // j. b
+                default:
+                    move  = {10, 10, 0, 5, 20, false, false, LOW, NEUTRAL};
+                    state = MOVE_B;
+                    break;    // b
+            }
+        }
+
+        if (is_pressed (C) && !is_pressed (C, input_history.at (1)))
+        {
+            switch (state)
+            {
+                case CROUCHING: break;    // c. c
+                case AIRBORNE: break;     // j. c
+                default:
+                    move  = {0, 0, 0, 0, 11, false, true, MID, NEUTRAL, {Move {50, 0, 20, 120, 51}}};
+                    state = MOVE_C;
+                    break;    // c
+            }
+        }
+
+        if (is_pressed (D) && !is_pressed (D, input_history.at (1)))
+        {
+            switch (state)
+            {
+                case CROUCHING: break;    // c. d
+                case AIRBORNE: break;     // j. d
+                default:
+                    move  = {10, 10, 0, 120, 26, true, false, HIGH, NEUTRAL};
+                    state = MOVE_D;
+                    break;    // d
+            }
+        }
+    }
+}
+
+void Player::update_movement_states ()
+{
+    if (state < TRANSITION_FIRST_STATE)
+    {
+        // jumping
+        if (is_pressed (UP))
+        {
+            if (is_pressed (LEFT) && is_lefthand_player)
+                state = NEUTRAL_TO_BACKWARD_AIR;
+            else if (is_pressed (LEFT) && !is_lefthand_player)
+                state = NEUTRAL_TO_FORWARD_AIR;
+            else if (is_pressed (RIGHT) && is_lefthand_player)
+                state = NEUTRAL_TO_FORWARD_AIR;
+            else if (is_pressed (RIGHT) && !is_lefthand_player)
+                state = NEUTRAL_TO_BACKWARD_AIR;
+            else
+                state = NEUTRAL_TO_AIR;
+        }
+
+        // crouching
+        else if (is_pressed (DOWN))
+        {
+            state = NEUTRAL_TO_CROUCH;
+        }
+    }
+}
+
+void Player::update_idle_animation ()
+{
+    texture = animations.at (state).get_frame (frame_counter / 10);
+
+    hitboxes  = animations.at (state).get_hitboxes (frame_counter / 10);
+    hurtboxes = animations.at (state).get_hurtboxes (frame_counter / 10);
+
+    SDL_SetTextureAlphaMod (texture, i_frames == 0 ? 255 : 40);
+}
+
+void Player::update_frame_animation ()
+{
+    texture = animations.at (state).get_frame (counter);
+
+    hitboxes  = animations.at (state).get_hitboxes (counter);
+    hurtboxes = animations.at (state).get_hurtboxes (counter);
+
+    SDL_SetTextureAlphaMod (texture, i_frames == 0 ? 255 : 40);
+}
+
+void Player::update_collision ()
+{
+    // update collision rect
+    collision = {-35, -300, 70, 300};
+
+    switch (state)
+    {
+        case CROUCHING:
+            collision.h = 200;
+            collision.y = -200;
+            break;
+        case AIRBORNE: collision.h = 100; break;
+        default: collision.h = 300; break;
+    }
+
+    collision.x *= (is_lefthand_player ? 1 : -1);
+    collision.w *= (is_lefthand_player ? 1 : -1);
+
+    collision.x += x;
+    collision.y += y;
+
+    if (collision.w < 0)
+    {
+        collision.x += collision.w;
+        collision.w = fabs (collision.w);
+    }
+
+    // if against a wall, stop moving
+    if (collision.x < left_wall)
+    {
+        x           = left_wall + fabs (collision.x - x);
+        collision.x = left_wall;
+    }
+    else if (collision.x + collision.w > right_wall)
+    {
+        x           = right_wall - fabs (collision.x - x + collision.w);
+        collision.x = right_wall - collision.w;
+    }
+
+    // if there is a collision, move half the difference (other player moves other half)
+    else if (rect_intersect (collision, other_player->collision))
+    {
+        if (!is_lefthand_player)
+            x += (other_player->collision.x + other_player->collision.w - collision.x) / 2;
+        else
+            x -= (collision.x + collision.w - other_player->collision.x) / 2;
+    }
+}
+
+void Player::update_hitboxes ()
+{
+    // frame selection done is update_*_animation
+
+    if (!is_lefthand_player)
+    {
+        for (auto & hitbox : hitboxes)
+        {
+            hitbox.w *= -1;
+            hitbox.x *= -1;
+        }
+
+        for (auto & hurtbox : hurtboxes)
+        {
+            hurtbox.w *= -1;
+            hurtbox.x *= -1;
+        }
+    }
+
+    for (auto & hitbox : hitboxes)
+    {
+        hitbox.x += x;
+        hitbox.y += y;
+    }
+
+    for (auto & hurtbox : hurtboxes)
+    {
+        hurtbox.x += x;
+        hurtbox.y += y;
+    }
+}
+
+bool Player::is_pressed (unsigned long button) { return is_pressed (button, input_history.at (0)); }
+
+bool Player::is_pressed (unsigned long button, unsigned long state)
+{
+    // if we are checking for directionals, consider cancelling inputs
+    if (button == UP)
+        return ((UP & state) == UP) && !((DOWN & state) == DOWN);
+    else if (button == DOWN)
+        return !((UP & state) == UP) && ((DOWN & state) == DOWN);
+    else if (button == LEFT)
+        return ((LEFT & state) == LEFT) && !((RIGHT & state) == RIGHT);
+    else if (button == RIGHT)
+        return !((LEFT & state) == LEFT) && ((RIGHT & state) == RIGHT);
+
+    // default case
+    return (button & state) == button;
+}
+
+bool Player::find_input_string (std::vector<unsigned long> pattern, int fuzziness)
+{
+    int  current_history_index    = 0;
+    bool found_end_of_repetitions = false;
+
+    for (auto & key : pattern)
+    {
+        if (input_history.at (current_history_index) != key) return false;
+
+        found_end_of_repetitions = false;
+
+        for (int i = 0; i < fuzziness; i++)
+        {
+            if (current_history_index > input_history.size ()) break;
+
+            if (input_history.at (current_history_index++) != key)
+            {
+                found_end_of_repetitions = true;
+                break;
+            }
+        }
+
+        if (!found_end_of_repetitions) return false;
+    }
+
+    return true;
+}
+
+void Player::update_neutral ()
+{
+    // walking / sprinting
+    if ((is_pressed (LEFT) || is_pressed (RIGHT)))
+    {
+        unsigned long direction         = is_pressed (LEFT) ? LEFT : RIGHT;
+        bool          is_local_lefthand = direction == LEFT ? is_lefthand_player : !is_lefthand_player;
+
+        if (y >= ground)
+        {
+            // sprint start
+            if (state == SPRINT) state = is_local_lefthand ? NEUTRAL : SPRINT;
+
+            // check for sprint start
+            else if (find_input_string ({direction, 0, direction}))
+            {
+                state = is_local_lefthand ? BACKDASH : SPRINT;
+                input_history.clear ();
+            }
+
+            // check for walking
+            else
+                state = is_local_lefthand ? WALK_BACKWARD : WALK_FORWARD;
+        }
+    }
+
+    update_movement_states ();
+    update_idle_animation ();
+}
+
+void Player::update_crouching ()
+{
+    if (!is_pressed (DOWN)) state = CROUCH_TO_NEUTRAL;
+
+    update_idle_animation ();
+}
+
+void Player::update_airborne ()
+{
+    if (y >= ground) state = NEUTRAL;
+
+    update_idle_animation ();
+}
+
+void Player::update_walk_forward ()
+{
+    x += is_lefthand_player ? walk_speed : -walk_speed;
+    if (!is_pressed (is_lefthand_player ? RIGHT : LEFT)) state = NEUTRAL;
+
+    update_movement_states ();
+    update_idle_animation ();
+}
+
+void Player::update_walk_backward ()
+{
+    x += is_lefthand_player ? -reverse_walk_speed : reverse_walk_speed;
+    if (!is_pressed (is_lefthand_player ? LEFT : RIGHT)) state = NEUTRAL;
+
+    update_movement_states ();
+    update_idle_animation ();
+}
+
+void Player::update_sprint ()
+{
+    x += is_lefthand_player ? sprint_speed : -sprint_speed;
+
+    if (!is_pressed (is_lefthand_player ? RIGHT : LEFT))
+        state = NEUTRAL;
+    else
+        state = SPRINT;
+
+    update_movement_states ();
+    update_idle_animation ();
+}
+
+void Player::update_backdash ()
+{
+    if (counter > time_to_backdash)
+    {
+        state   = NEUTRAL;
+        counter = 0;
+    }
+    else
+    {
+        x += is_lefthand_player ? -backdash : backdash;
+        counter++;
+    }
+
+    update_frame_animation ();
+}
+
+void Player::update_stun ()
+{
+    if (counter <= 0)
+    {
+        state   = state == BLOCK_CROUCH ? CROUCHING : NEUTRAL;
+        counter = 0;
+    }
+    else
+    {
+        counter--;
+
+        // change stun when landing
+        if (y >= ground) switch (state)
+            {
+                case BLOCK_AIR: state = BLOCK_NEUTRAL; break;
+                case STUN_AIR: state = STUN_NEUTRAL; break;
+            }
+    }
+
+    update_frame_animation ();
+}
+
+void Player::update_neutral_to_crouch ()
+{
+    if (counter > time_to_crouch)
+    {
+        state   = CROUCHING;
+        counter = 0;
+    }
+    else
+        counter++;
+
+    update_frame_animation ();
+}
+
+void Player::update_neutral_to_air ()
+{
+    if (counter > time_to_jump)
+    {
+        state   = AIRBORNE;
+        v_y     = jump_height;
+        counter = 0;
+    }
+    else
+        counter++;
+
+    update_frame_animation ();
+}
+
+void Player::update_neutral_to_forward_air ()
+{
+    if (counter > time_to_jump)
+    {
+        state   = AIRBORNE;
+        v_x     = is_lefthand_player ? 15 : -15;
+        v_y     = jump_height;
+        counter = 0;
+    }
+    else
+        counter++;
+
+    update_frame_animation ();
+}
+
+void Player::update_neutral_to_backward_air ()
+{
+    if (counter > time_to_jump)
+    {
+        state   = AIRBORNE;
+        v_x     = is_lefthand_player ? -15 : 15;
+        v_y     = jump_height;
+        counter = 0;
+    }
+    else
+        counter++;
+
+    update_frame_animation ();
+}
+
+void Player::update_crouch_to_neutral ()
+{
+    if (counter > time_to_stand)
+    {
+        state   = NEUTRAL;
+        counter = 0;
+    }
+    else
+        counter++;
+
+    update_frame_animation ();
+}
+
+void Player::update_standard_move ()
+{
+    if (move.is_grab && grab_hit)
+    {
+        grab_hit = false;
+        state += 1;
+        counter = 0;
+
+        if (move.successful_grab_move.size () > 0) { move = move.successful_grab_move.at (0); }
+    }
+
+    if (counter >= move.frame_length)
+    {
+        state   = move.final_state;
+        counter = 0;
+    }
+    else
+    {
+        counter++;
+    }
+
+    update_frame_animation ();
+}
+
+void Player::update_grab ()
+{
+    if (counter >= move.frame_length)
+    {
+        state                  = move.final_state;
+        counter                = 0;
+        other_player->i_frames = 0;
+        other_player->hit (move);
+        other_player->state = KNOCKED_DOWN;
+    }
+    else
+    {
+        counter++;
+    }
+
+    update_frame_animation ();
+
+    if (hitboxes.size () > 0)
+    {
+        other_player->x = ((is_lefthand_player ? 1 : -1) * hitboxes.at (0).x) + x;
+        other_player->y = hitboxes.at (0).y + y + 200;
+    }
+}

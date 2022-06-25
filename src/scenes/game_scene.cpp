@@ -1,18 +1,24 @@
 #include "scenes/game_scene.hpp"
 
-GameScene::GameScene (int width, int height) : Scene (width, height), ground_y (height * 0.8) {}
+GameScene::GameScene (int width, int height) : Scene (width, height), ground_y (900) {}
 
 bool GameScene::init (SDL_Renderer * renderer)
 {
     // Initialization flag
     bool success = true;
 
-    players.push_back (Player {(float) ground_y});
-    players.push_back (Player {(float) ground_y});
+    players.push_back (Player {true});
+    players.push_back (Player {false});
+
+    players.at (0).other_player = &players.at (1);
+    players.at (1).other_player = &players.at (0);
+
+    players.at (0).x = 1200;
+    players.at (1).x = 500;
+    players.at (0).y = ground_y;
+    players.at (1).y = ground_y;
 
     for (auto & player : players) player.load_textures (renderer);
-
-    players.at (1).x = 500;
 
     return success;
 }
@@ -26,39 +32,37 @@ bool GameScene::step_event (SDL_Event & e)
         case SDL_KEYDOWN:
             switch (e.key.keysym.sym)
             {
-                // 1 for down, -1 for up
                 case SDLK_w:
-                case SDLK_UP: players.at (1).directional_input (1, 0, 0, 0); break;
+                case SDLK_UP: players.at (1).input (UP, PRESSED); break;
                 case SDLK_s:
-                case SDLK_DOWN: players.at (1).directional_input (0, 1, 0, 0); break;
+                case SDLK_DOWN: players.at (1).input (DOWN, PRESSED); break;
                 case SDLK_a:
-                case SDLK_LEFT: players.at (1).directional_input (0, 0, 1, 0); break;
+                case SDLK_LEFT: players.at (1).input (LEFT, PRESSED); break;
                 case SDLK_d:
-                case SDLK_RIGHT: players.at (1).directional_input (0, 0, 0, 1); break;
-                case SDLK_j: players.at (1).button_input (0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;            // x
-                case SDLK_k: players.at (1).button_input (0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;            // x
-                case SDLK_l: players.at (1).button_input (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;            // x
-                case SDLK_SEMICOLON: players.at (1).button_input (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;    // x
+                case SDLK_RIGHT: players.at (1).input (RIGHT, PRESSED); break;
+                case SDLK_j: players.at (1).input (A, PRESSED); break;
+                case SDLK_k: players.at (1).input (B, PRESSED); break;
+                case SDLK_l: players.at (1).input (C, PRESSED); break;
+                case SDLK_SEMICOLON: players.at (1).input (D, PRESSED); break;
+
+                case SDLK_F3: is_debug = !is_debug; break;
             }
             break;
         case SDL_KEYUP:
             switch (e.key.keysym.sym)
             {
-                // 1 for down, -1 for up
                 case SDLK_w:
-                case SDLK_UP: players.at (1).directional_input (-1, 0, 0, 0); break;
+                case SDLK_UP: players.at (1).input (UP, RELEASED); break;
                 case SDLK_s:
-                case SDLK_DOWN: players.at (1).directional_input (0, -1, 0, 0); break;
+                case SDLK_DOWN: players.at (1).input (DOWN, RELEASED); break;
                 case SDLK_a:
-                case SDLK_LEFT: players.at (1).directional_input (0, 0, -1, 0); break;
+                case SDLK_LEFT: players.at (1).input (LEFT, RELEASED); break;
                 case SDLK_d:
-                case SDLK_RIGHT: players.at (1).directional_input (0, 0, 0, -1); break;
-                case SDLK_j: players.at (1).button_input (0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;    // x
-                case SDLK_k: players.at (1).button_input (0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;    // x
-                case SDLK_l: players.at (1).button_input (0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;    // x
-                case SDLK_SEMICOLON:
-                    players.at (1).button_input (0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                    break;    // x
+                case SDLK_RIGHT: players.at (1).input (RIGHT, RELEASED); break;
+                case SDLK_j: players.at (1).input (A, RELEASED); break;
+                case SDLK_k: players.at (1).input (B, RELEASED); break;
+                case SDLK_l: players.at (1).input (C, RELEASED); break;
+                case SDLK_SEMICOLON: players.at (1).input (D, RELEASED); break;
             }
             break;
         case SDL_JOYBUTTONDOWN:
@@ -67,22 +71,22 @@ bool GameScene::step_event (SDL_Event & e)
                 // std::cout << (int) e.jbutton.button << "\n";
                 switch ((int) e.jbutton.button)
                 {
-                    case 0: players.at (0).button_input (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;     // x
-                    case 1: players.at (0).button_input (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;     // circle
-                    case 2: players.at (0).button_input (0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;     // square
-                    case 3: players.at (0).button_input (0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;     // triangle
-                    case 4: players.at (0).button_input (0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0); break;     // select
-                    case 5: players.at (0).button_input (0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0); break;     // logo
-                    case 6: players.at (0).button_input (0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0); break;     // start
-                    case 7: players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0); break;     // l stick
-                    case 8: players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0); break;     // r stick
-                    case 9: players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0); break;     // l bumper
-                    case 10: players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0); break;    // r bumper
+                    case 0: players.at (0).input (A, PRESSED); break;    // x
+                    case 1: players.at (0).input (B, PRESSED); break;    // circle
+                    case 2: players.at (0).input (C, PRESSED); break;    // square
+                    case 3: players.at (0).input (D, PRESSED); break;    // triangle
+                    case 4:                                              // select
+                    case 5:                                              // logo
+                    case 6:                                              // start
+                    case 7:                                              // l stick
+                    case 8:                                              // r stick
+                    case 9:                                              // l bumper
+                    case 10: break;                                      // r bumper
 
-                    case 11: players.at (0).directional_input (1, 0, 0, 0); break;    // up
-                    case 12: players.at (0).directional_input (0, 1, 0, 0); break;    // down
-                    case 13: players.at (0).directional_input (0, 0, 1, 0); break;    // left
-                    case 14: players.at (0).directional_input (0, 0, 0, 1); break;    // right
+                    case 11: players.at (0).input (UP, PRESSED); break;       // up
+                    case 12: players.at (0).input (DOWN, PRESSED); break;     // down
+                    case 13: players.at (0).input (LEFT, PRESSED); break;     // left
+                    case 14: players.at (0).input (RIGHT, PRESSED); break;    // right
                 }
             }
             break;
@@ -92,22 +96,22 @@ bool GameScene::step_event (SDL_Event & e)
                 // std::cout << (int) e.jbutton.button << "\n";
                 switch ((int) e.jbutton.button)
                 {
-                    case 0: players.at (0).button_input (-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;     // x
-                    case 1: players.at (0).button_input (0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;     // circle
-                    case 2: players.at (0).button_input (0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;     // square
-                    case 3: players.at (0).button_input (0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0); break;     // triangle
-                    case 4: players.at (0).button_input (0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0); break;     // select
-                    case 5: players.at (0).button_input (0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0); break;     // logo
-                    case 6: players.at (0).button_input (0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0); break;     // start
-                    case 7: players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0); break;     // l stick
-                    case 8: players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0); break;     // r stick
-                    case 9: players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0); break;     // l bumper
-                    case 10: players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0); break;    // r bumper
+                    case 0: players.at (0).input (A, RELEASED); break;    // x
+                    case 1: players.at (0).input (B, RELEASED); break;    // circle
+                    case 2: players.at (0).input (C, RELEASED); break;    // square
+                    case 3: players.at (0).input (D, RELEASED); break;    // triangle
+                    case 4:                                               // select
+                    case 5:                                               // logo
+                    case 6:                                               // start
+                    case 7:                                               // l stick
+                    case 8:                                               // r stick
+                    case 9:                                               // l bumper
+                    case 10: break;                                       // r bumper
 
-                    case 11: players.at (0).directional_input (-1, 0, 0, 0); break;    // up
-                    case 12: players.at (0).directional_input (0, -1, 0, 0); break;    // down
-                    case 13: players.at (0).directional_input (0, 0, -1, 0); break;    // left
-                    case 14: players.at (0).directional_input (0, 0, 0, -1); break;    // right
+                    case 11: players.at (0).input (UP, RELEASED); break;       // up
+                    case 12: players.at (0).input (DOWN, RELEASED); break;     // down
+                    case 13: players.at (0).input (LEFT, RELEASED); break;     // left
+                    case 14: players.at (0).input (RIGHT, RELEASED); break;    // right
                 }
             }
             break;
@@ -118,81 +122,81 @@ bool GameScene::step_event (SDL_Event & e)
                 switch (e.jhat.value)
                 {
                     // 1 for down, -1 for up
-                    case SDL_HAT_LEFTUP: players.at (0).directional_input (1, -1, 1, -1); break;
-                    case SDL_HAT_UP: players.at (0).directional_input (1, -1, -1, -1); break;
-                    case SDL_HAT_RIGHTUP: players.at (0).directional_input (1, -1, -1, 1); break;
-                    case SDL_HAT_LEFT: players.at (0).directional_input (-1, -1, 1, -1); break;
-                    case SDL_HAT_CENTERED: players.at (0).directional_input (-1, -1, -1, -1); break;
-                    case SDL_HAT_RIGHT: players.at (0).directional_input (-1, -1, -1, 1); break;
-                    case SDL_HAT_LEFTDOWN: players.at (0).directional_input (-1, 1, 1, -1); break;
-                    case SDL_HAT_DOWN: players.at (0).directional_input (-1, 1, -1, -1); break;
-                    case SDL_HAT_RIGHTDOWN: players.at (0).directional_input (-1, 1, -1, 1); break;
+                    /*case SDL_HAT_LEFTUP: players.at (0).input (UP | LEFT, PRESSED); break;
+                    case SDL_HAT_UP: players.at (0).input (UP, PRESSED); break;
+                    case SDL_HAT_RIGHTUP: players.at (0).input (UP | RIGHT, PRESSED); break;
+                    case SDL_HAT_LEFT: players.at (0).input (LEFT, PRESSED); break;
+                    case SDL_HAT_CENTERED: players.at (0).input (UP, PRESSED); break;
+                    case SDL_HAT_RIGHT: players.at (0).input (UP, PRESSED); break;
+                    case SDL_HAT_LEFTDOWN: players.at (0).input (UP, PRESSED); break;
+                    case SDL_HAT_DOWN: players.at (0).input (UP, PRESSED); break;
+                    case SDL_HAT_RIGHTDOWN: players.at (0).input (UP, PRESSED); break;*/
                 }
             }
             break;
         case SDL_JOYAXISMOTION:
-            // if (fabs (e.jaxis.value) > JOYSTICK_DEADZONE) std::cout << (int) e.jaxis.axis << "\n";
+            //// if (fabs (e.jaxis.value) > JOYSTICK_DEADZONE) std::cout << (int) e.jaxis.axis << "\n";
 
-            // Motion on controller 0
-            if (e.jaxis.which == 0)
-            {
-                // X axis motion on left stick
-                if (e.jaxis.axis == 0)
-                {
-                    joystick_x = e.jaxis.value;
-                    if (abs (joystick_x) > JOYSTICK_DEADZONE)
-                    {
-                        if (joystick_x > 0)
-                            players.at (0).directional_input (0, 0, -1, 1);
-                        else
-                            players.at (0).directional_input (0, 0, 1, -1);
-                    }
-                    else
-                    {
-                        players.at (0).directional_input (0, 0, -1, -1);
-                    }
-                }
-                // Y axis motion on left stick
-                else if (e.jaxis.axis == 1)
-                {
-                    joystick_y = e.jaxis.value;
-                    if (abs (joystick_y) > JOYSTICK_DEADZONE)
-                    {
-                        if (joystick_y > 0)
-                            players.at (0).directional_input (-1, 1, 0, 0);
-                        else
-                            players.at (0).directional_input (1, -1, 0, 0);
-                    }
-                    else
-                    {
-                        players.at (0).directional_input (-1, -1, 0, 0);
-                    }
-                }
-                // X axis motion on right stick
-                else if (e.jaxis.axis == 2)
-                {
-                }
-                // Y axis motion on right stick
-                else if (e.jaxis.axis == 3)
-                {
-                }
-                // left trigger
-                else if (e.jaxis.axis == 4)
-                {
-                    if (e.jaxis.value > -28000)
-                        players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
-                    else
-                        players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0);
-                }
-                // right trigger
-                else if (e.jaxis.axis == 5)
-                {
-                    if (e.jaxis.value > -28000)
-                        players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
-                    else
-                        players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1);
-                }
-            }
+            //// Motion on controller 0
+            // if (e.jaxis.which == 0)
+            //{
+            //    // X axis motion on left stick
+            //    if (e.jaxis.axis == 0)
+            //    {
+            //        joystick_x = e.jaxis.value;
+            //        if (abs (joystick_x) > JOYSTICK_DEADZONE)
+            //        {
+            //            if (joystick_x > 0)
+            //                players.at (0).directional_input (0, 0, -1, 1);
+            //            else
+            //                players.at (0).directional_input (0, 0, 1, -1);
+            //        }
+            //        else
+            //        {
+            //            players.at (0).directional_input (0, 0, -1, -1);
+            //        }
+            //    }
+            //    // Y axis motion on left stick
+            //    else if (e.jaxis.axis == 1)
+            //    {
+            //        joystick_y = e.jaxis.value;
+            //        if (abs (joystick_y) > JOYSTICK_DEADZONE)
+            //        {
+            //            if (joystick_y > 0)
+            //                players.at (0).directional_input (-1, 1, 0, 0);
+            //            else
+            //                players.at (0).directional_input (1, -1, 0, 0);
+            //        }
+            //        else
+            //        {
+            //            players.at (0).directional_input (-1, -1, 0, 0);
+            //        }
+            //    }
+            //    // X axis motion on right stick
+            //    else if (e.jaxis.axis == 2)
+            //    {
+            //    }
+            //    // Y axis motion on right stick
+            //    else if (e.jaxis.axis == 3)
+            //    {
+            //    }
+            //    // left trigger
+            //    else if (e.jaxis.axis == 4)
+            //    {
+            //        if (e.jaxis.value > -28000)
+            //            players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+            //        else
+            //            players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0);
+            //    }
+            //    // right trigger
+            //    else if (e.jaxis.axis == 5)
+            //    {
+            //        if (e.jaxis.value > -28000)
+            //            players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+            //        else
+            //            players.at (0).button_input (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1);
+            //    }
+            //}
             break;
     }
 
@@ -206,19 +210,22 @@ void GameScene::step_scene ()
     // player logic
     for (auto & player : players) player.update ();
 
-    // side checks
-    if (players[0].x > players[1].x)
-    {
-        players[0].is_left = true;
-        players[1].is_left = false;
-    }
-    else
-    {
-        players[1].is_left = true;
-        players[0].is_left = false;
-    }
+    if (!(players.at (0).state == GRABBED) && !(players.at (1).state == GRABBED))
+        // side checks
+        if (players[0].x > players[1].x )
+        {
+            players[0].is_lefthand_player = false;
+            players[1].is_lefthand_player = true;
+        }
+        else
+        {
+            players[1].is_lefthand_player = false;
+            players[0].is_lefthand_player = true;
+        }
 
-    //// // hit detection
+    std::cout << players[0].x << ", " << players[1].x << "\n";
+
+    // // hit detection
 
     bool hit = false;
 
@@ -230,12 +237,9 @@ void GameScene::step_scene ()
             // if there is a hit
             if (rect_intersect (hitbox, hurtbox))
             {
-                players.at (1).health -= players.at (0).move.damage;
-                /*std::cout << "p1 hit p2 for " << players.at (0).move.damage
-                          << " damage, new health of p2 is"
-                          << players.at (1).health << "\n";*/
-                players.at (0).move.damage = 0;
-                hit                        = true;
+                players.at (1).hit (players.at (0).move);
+
+                hit = true;
             }
 
             if (hit) break;
@@ -253,11 +257,9 @@ void GameScene::step_scene ()
             // if there is a hit
             if (rect_intersect (hitbox, hurtbox))
             {
-                /*std::cout << "p2 hit p1 for "
-                          << "\n";*/
-                players.at (0).health -= players.at (1).move.damage;
-                players.at (1).move.damage = 0;
-                hit                        = true;
+                players.at (0).hit (players.at (1).move);
+
+                hit = true;
             }
             if (hit) break;
         }
@@ -271,27 +273,39 @@ void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int &
     for (auto & player : players)
     {
         // // Player
+        SDL_SetRenderDrawColor (renderer, 0, 0, 180, 0xFF);
         SDL_RendererFlip flip = {};
-        if (player.is_left) flip = SDL_FLIP_HORIZONTAL;
-        SDL_RenderCopyEx (renderer, player.texture, &player.src_area, &player.dst_area, 0, NULL, flip);
+        if (!player.is_lefthand_player) flip = SDL_FLIP_HORIZONTAL;
+        SDL_RenderCopyEx (renderer, player.texture, NULL, &player.dst_area, 0, NULL, flip);
 
-        // // Debug lines
-        // floor
-        SDL_SetRenderDrawColor (renderer, 40, 40, 0, 0xFF);
-        SDL_RenderDrawLine (renderer, 0, ground_y, width, ground_y);
+        if (is_debug)
+        {
+            // // Debug lines
+            // hit and hurtboxes
+            SDL_RenderDrawRect (renderer, &player.dst_area);
+            SDL_SetRenderDrawColor (renderer, 180, 180, 0, 0xFF);
+            SDL_RenderDrawRect (renderer, &player.collision);
+            
+            // floor and walls
+            SDL_SetRenderDrawColor (renderer, 40, 40, 0, 0xFF);
+            SDL_RenderDrawLine (renderer, 0, ground_y, width, ground_y);
+            SDL_RenderDrawLine (renderer, 50, 0, 50, height);
+            SDL_RenderDrawLine (renderer, 1870, 0, 1870, height);
 
-        // player position
-        SDL_SetRenderDrawColor (renderer, 255, 255, 255, 0xFF);
-        SDL_RenderDrawLine (renderer, player.x + 10, player.y, player.x - 10, player.y);
-        SDL_RenderDrawLine (renderer, player.x, player.y + 10, player.x, player.y - 10);
+            // player position
+            SDL_SetRenderDrawColor (renderer, 255, 255, 255, 0xFF);
+            SDL_RenderDrawLine (renderer, player.x + 10, player.y, player.x - 10, player.y);
+            SDL_RenderDrawLine (renderer, player.x, player.y + 10, player.x, player.y - 10);
 
-        // player hurtboxes
-        SDL_SetRenderDrawColor (renderer, 0, 180, 0, 80);
-        for (auto & hurtbox : player.hurtboxes) { SDL_RenderFillRect (renderer, &hurtbox); }
 
-        // player hitboxes
-        SDL_SetRenderDrawColor (renderer, 180, 0, 0, 120);
-        for (auto & hitbox : player.hitboxes) { SDL_RenderFillRect (renderer, &hitbox); }
+            // player hurtboxes
+            SDL_SetRenderDrawColor (renderer, 0, 180, 0, 80);
+            for (auto & hurtbox : player.hurtboxes) { SDL_RenderFillRect (renderer, &hurtbox); }
+
+            // player hitboxes
+            SDL_SetRenderDrawColor (renderer, 180, 0, 0, 120);
+            for (auto & hitbox : player.hitboxes) { SDL_RenderFillRect (renderer, &hitbox); }
+        }
     }
 
     // draw UI

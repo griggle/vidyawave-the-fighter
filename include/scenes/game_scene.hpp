@@ -13,6 +13,8 @@ class GameScene : public Scene
 
     int ground_y;
 
+    bool is_debug = false;
+
     std::vector<Player> players;
 
   public:

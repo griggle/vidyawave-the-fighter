@@ -2,6 +2,7 @@
 
 #include <SDL_net.h>
 #include <iostream>
+#include <queue>
 
 int main (int argc, char * args[])
 {
