@@ -7,18 +7,18 @@ bool GameScene::init (SDL_Renderer * renderer)
     // Initialization flag
     bool success = true;
 
-    players.push_back (Player {true});
-    players.push_back (Player {false});
+    players.push_back (new PlayerJohnDebug ());
+    players.push_back (new PlayerJohnDebug ());
 
-    players.at (0).other_player = &players.at (1);
-    players.at (1).other_player = &players.at (0);
+    players.at (0)->other_player = players.at (1);
+    players.at (1)->other_player = players.at (0);
 
-    players.at (0).x = 1200;
-    players.at (1).x = 500;
-    players.at (0).y = ground_y;
-    players.at (1).y = ground_y;
+    players.at (0)->x = 1200;
+    players.at (1)->x = 500;
+    players.at (0)->y = ground_y;
+    players.at (1)->y = ground_y;
 
-    for (auto & player : players) player.load_textures (renderer);
+    for (auto & player : players) player->load_states (renderer);
 
     return success;
 }
@@ -33,17 +33,17 @@ bool GameScene::step_event (SDL_Event & e)
             switch (e.key.keysym.sym)
             {
                 case SDLK_w:
-                case SDLK_UP: players.at (1).input (UP, PRESSED); break;
+                case SDLK_UP: players.at (1)->input (UP, PRESSED); break;
                 case SDLK_s:
-                case SDLK_DOWN: players.at (1).input (DOWN, PRESSED); break;
+                case SDLK_DOWN: players.at (1)->input (DOWN, PRESSED); break;
                 case SDLK_a:
-                case SDLK_LEFT: players.at (1).input (LEFT, PRESSED); break;
+                case SDLK_LEFT: players.at (1)->input (LEFT, PRESSED); break;
                 case SDLK_d:
-                case SDLK_RIGHT: players.at (1).input (RIGHT, PRESSED); break;
-                case SDLK_j: players.at (1).input (A, PRESSED); break;
-                case SDLK_k: players.at (1).input (B, PRESSED); break;
-                case SDLK_l: players.at (1).input (C, PRESSED); break;
-                case SDLK_SEMICOLON: players.at (1).input (D, PRESSED); break;
+                case SDLK_RIGHT: players.at (1)->input (RIGHT, PRESSED); break;
+                case SDLK_j: players.at (1)->input (A, PRESSED); break;
+                case SDLK_k: players.at (1)->input (B, PRESSED); break;
+                case SDLK_l: players.at (1)->input (C, PRESSED); break;
+                case SDLK_SEMICOLON: players.at (1)->input (D, PRESSED); break;
 
                 case SDLK_F3: is_debug = !is_debug; break;
             }
@@ -52,17 +52,17 @@ bool GameScene::step_event (SDL_Event & e)
             switch (e.key.keysym.sym)
             {
                 case SDLK_w:
-                case SDLK_UP: players.at (1).input (UP, RELEASED); break;
+                case SDLK_UP: players.at (1)->input (UP, RELEASED); break;
                 case SDLK_s:
-                case SDLK_DOWN: players.at (1).input (DOWN, RELEASED); break;
+                case SDLK_DOWN: players.at (1)->input (DOWN, RELEASED); break;
                 case SDLK_a:
-                case SDLK_LEFT: players.at (1).input (LEFT, RELEASED); break;
+                case SDLK_LEFT: players.at (1)->input (LEFT, RELEASED); break;
                 case SDLK_d:
-                case SDLK_RIGHT: players.at (1).input (RIGHT, RELEASED); break;
-                case SDLK_j: players.at (1).input (A, RELEASED); break;
-                case SDLK_k: players.at (1).input (B, RELEASED); break;
-                case SDLK_l: players.at (1).input (C, RELEASED); break;
-                case SDLK_SEMICOLON: players.at (1).input (D, RELEASED); break;
+                case SDLK_RIGHT: players.at (1)->input (RIGHT, RELEASED); break;
+                case SDLK_j: players.at (1)->input (A, RELEASED); break;
+                case SDLK_k: players.at (1)->input (B, RELEASED); break;
+                case SDLK_l: players.at (1)->input (C, RELEASED); break;
+                case SDLK_SEMICOLON: players.at (1)->input (D, RELEASED); break;
             }
             break;
         case SDL_JOYBUTTONDOWN:
@@ -71,22 +71,22 @@ bool GameScene::step_event (SDL_Event & e)
                 // std::cout << (int) e.jbutton.button << "\n";
                 switch ((int) e.jbutton.button)
                 {
-                    case 0: players.at (0).input (A, PRESSED); break;    // x
-                    case 1: players.at (0).input (B, PRESSED); break;    // circle
-                    case 2: players.at (0).input (C, PRESSED); break;    // square
-                    case 3: players.at (0).input (D, PRESSED); break;    // triangle
-                    case 4:                                              // select
-                    case 5:                                              // logo
-                    case 6:                                              // start
-                    case 7:                                              // l stick
-                    case 8:                                              // r stick
-                    case 9:                                              // l bumper
-                    case 10: break;                                      // r bumper
+                    case 0: players.at (0)->input (A, PRESSED); break;    // x
+                    case 1: players.at (0)->input (B, PRESSED); break;    // circle
+                    case 2: players.at (0)->input (C, PRESSED); break;    // square
+                    case 3: players.at (0)->input (D, PRESSED); break;    // triangle
+                    case 4:                                               // select
+                    case 5:                                               // logo
+                    case 6:                                               // start
+                    case 7:                                               // l stick
+                    case 8:                                               // r stick
+                    case 9:                                               // l bumper
+                    case 10: break;                                       // r bumper
 
-                    case 11: players.at (0).input (UP, PRESSED); break;       // up
-                    case 12: players.at (0).input (DOWN, PRESSED); break;     // down
-                    case 13: players.at (0).input (LEFT, PRESSED); break;     // left
-                    case 14: players.at (0).input (RIGHT, PRESSED); break;    // right
+                    case 11: players.at (0)->input (UP, PRESSED); break;       // up
+                    case 12: players.at (0)->input (DOWN, PRESSED); break;     // down
+                    case 13: players.at (0)->input (LEFT, PRESSED); break;     // left
+                    case 14: players.at (0)->input (RIGHT, PRESSED); break;    // right
                 }
             }
             break;
@@ -96,22 +96,22 @@ bool GameScene::step_event (SDL_Event & e)
                 // std::cout << (int) e.jbutton.button << "\n";
                 switch ((int) e.jbutton.button)
                 {
-                    case 0: players.at (0).input (A, RELEASED); break;    // x
-                    case 1: players.at (0).input (B, RELEASED); break;    // circle
-                    case 2: players.at (0).input (C, RELEASED); break;    // square
-                    case 3: players.at (0).input (D, RELEASED); break;    // triangle
-                    case 4:                                               // select
-                    case 5:                                               // logo
-                    case 6:                                               // start
-                    case 7:                                               // l stick
-                    case 8:                                               // r stick
-                    case 9:                                               // l bumper
-                    case 10: break;                                       // r bumper
+                    case 0: players.at (0)->input (A, RELEASED); break;    // x
+                    case 1: players.at (0)->input (B, RELEASED); break;    // circle
+                    case 2: players.at (0)->input (C, RELEASED); break;    // square
+                    case 3: players.at (0)->input (D, RELEASED); break;    // triangle
+                    case 4:                                                // select
+                    case 5:                                                // logo
+                    case 6:                                                // start
+                    case 7:                                                // l stick
+                    case 8:                                                // r stick
+                    case 9:                                                // l bumper
+                    case 10: break;                                        // r bumper
 
-                    case 11: players.at (0).input (UP, RELEASED); break;       // up
-                    case 12: players.at (0).input (DOWN, RELEASED); break;     // down
-                    case 13: players.at (0).input (LEFT, RELEASED); break;     // left
-                    case 14: players.at (0).input (RIGHT, RELEASED); break;    // right
+                    case 11: players.at (0)->input (UP, RELEASED); break;       // up
+                    case 12: players.at (0)->input (DOWN, RELEASED); break;     // down
+                    case 13: players.at (0)->input (LEFT, RELEASED); break;     // left
+                    case 14: players.at (0)->input (RIGHT, RELEASED); break;    // right
                 }
             }
             break;
@@ -208,63 +208,7 @@ bool GameScene::step_event (SDL_Event & e)
 void GameScene::step_scene ()
 {
     // player logic
-    for (auto & player : players) player.update ();
-
-    if (!(players.at (0).state == GRABBED) && !(players.at (1).state == GRABBED))
-        // side checks
-        if (players[0].x > players[1].x )
-        {
-            players[0].is_lefthand_player = false;
-            players[1].is_lefthand_player = true;
-        }
-        else
-        {
-            players[1].is_lefthand_player = false;
-            players[0].is_lefthand_player = true;
-        }
-
-    std::cout << players[0].x << ", " << players[1].x << "\n";
-
-    // // hit detection
-
-    bool hit = false;
-
-    // p1 hitting p2
-    for (auto & hitbox : players[0].hitboxes)
-    {
-        for (auto & hurtbox : players[1].hurtboxes)
-        {
-            // if there is a hit
-            if (rect_intersect (hitbox, hurtbox))
-            {
-                players.at (1).hit (players.at (0).move);
-
-                hit = true;
-            }
-
-            if (hit) break;
-        }
-        if (hit) break;
-    }
-
-    hit = false;
-
-    // p2 hitting p1
-    for (auto & hitbox : players[1].hitboxes)
-    {
-        for (auto & hurtbox : players[0].hurtboxes)
-        {
-            // if there is a hit
-            if (rect_intersect (hitbox, hurtbox))
-            {
-                players.at (0).hit (players.at (1).move);
-
-                hit = true;
-            }
-            if (hit) break;
-        }
-        if (hit) break;
-    }
+    for (auto & player : players) player->update ();
 }
 
 void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int & width, int & height)
@@ -275,17 +219,17 @@ void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int &
         // // Player
         SDL_SetRenderDrawColor (renderer, 0, 0, 180, 0xFF);
         SDL_RendererFlip flip = {};
-        if (!player.is_lefthand_player) flip = SDL_FLIP_HORIZONTAL;
-        SDL_RenderCopyEx (renderer, player.texture, NULL, &player.dst_area, 0, NULL, flip);
+        if (!player->is_left ()) flip = SDL_FLIP_HORIZONTAL;
+        SDL_RenderCopyEx (renderer, player->texture, NULL, &player->dst_area, 0, NULL, flip);
 
         if (is_debug)
         {
             // // Debug lines
             // hit and hurtboxes
-            SDL_RenderDrawRect (renderer, &player.dst_area);
+            SDL_RenderDrawRect (renderer, &player->dst_area);
             SDL_SetRenderDrawColor (renderer, 180, 180, 0, 0xFF);
-            SDL_RenderDrawRect (renderer, &player.collision);
-            
+            SDL_RenderDrawRect (renderer, &player->collision);
+
             // floor and walls
             SDL_SetRenderDrawColor (renderer, 40, 40, 0, 0xFF);
             SDL_RenderDrawLine (renderer, 0, ground_y, width, ground_y);
@@ -294,23 +238,38 @@ void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int &
 
             // player position
             SDL_SetRenderDrawColor (renderer, 255, 255, 255, 0xFF);
-            SDL_RenderDrawLine (renderer, player.x + 10, player.y, player.x - 10, player.y);
-            SDL_RenderDrawLine (renderer, player.x, player.y + 10, player.x, player.y - 10);
+            SDL_RenderDrawLine (renderer, player->x + 10, player->y, player->x - 10, player->y);
+            SDL_RenderDrawLine (renderer, player->x, player->y + 10, player->x, player->y - 10);
 
 
             // player hurtboxes
-            SDL_SetRenderDrawColor (renderer, 0, 180, 0, 80);
-            for (auto & hurtbox : player.hurtboxes) { SDL_RenderFillRect (renderer, &hurtbox); }
+            if (player->guard == Player::NONE)
+                SDL_SetRenderDrawColor (renderer, 0, 180, 0, 40);
+            else
+                SDL_SetRenderDrawColor (renderer, 0, 180, 180, 40);
+
+            for (auto & hurtbox : player->hurtboxes) { SDL_RenderFillRect (renderer, &hurtbox); }
+            
+            if (player->guard == Player::NONE)
+                SDL_SetRenderDrawColor (renderer, 0, 180, 0, 255);
+            else
+                SDL_SetRenderDrawColor (renderer, 0, 180, 180, 255);
+
+            for (auto & hurtbox : player->hurtboxes) { SDL_RenderDrawRect (renderer, &hurtbox); }
 
             // player hitboxes
-            SDL_SetRenderDrawColor (renderer, 180, 0, 0, 120);
-            for (auto & hitbox : player.hitboxes) { SDL_RenderFillRect (renderer, &hitbox); }
+            SDL_SetRenderDrawColor (renderer, 180, 0, 0, 40);
+            for (auto & hitbox : player->hitboxes) { SDL_RenderFillRect (renderer, &hitbox); }
+            SDL_SetRenderDrawColor (renderer, 180, 0, 0, 255);
+            for (auto & hitbox : player->hitboxes) { SDL_RenderDrawRect (renderer, &hitbox); }
         }
     }
 
     // draw UI
-    SDL_Rect player1_healthbar = {width / 2, 0, -(width / 2) * (players.at (0).health / players.at (0).max_health), 10};
-    SDL_Rect player2_healthbar = {width / 2, 0, (width / 2) * (players.at (1).health / players.at (1).max_health), 10};
+    SDL_Rect player1_healthbar
+        = {width / 2, 0, -(width / 2) * (players.at (0)->health / players.at (0)->max_health), 10};
+    SDL_Rect player2_healthbar
+        = {width / 2, 0, (width / 2) * (players.at (1)->health / players.at (1)->max_health), 10};
 
     SDL_SetRenderDrawColor (renderer, 0, 255, 0, 0xFF);
     SDL_RenderFillRect (renderer, &player1_healthbar);
@@ -323,5 +282,9 @@ void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int &
 
 void GameScene::close ()
 {
-    for (auto & player : players) player.close_textures ();
+    for (auto & player : players)
+    {
+        player->close ();
+        delete player;
+    }
 }

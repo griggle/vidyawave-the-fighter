@@ -1,16 +1,18 @@
 #include "canvas.hpp"
 
 #include <SDL_net.h>
+#include <chrono>
 #include <iostream>
 #include <queue>
+#include <thread>
 
 int main (int argc, char * args[])
 {
     std::cout << "launched\n";
 
-    //std::string mode = "";
+    // std::string mode = "";
 
-    //std::cin >> mode;
+    // std::cin >> mode;
 
     const int width  = 1920;
     const int height = 1080;
@@ -18,9 +20,46 @@ int main (int argc, char * args[])
     Canvas canvas (width, height);
 
     canvas.init ();
-    canvas.set_scene (new GameScene(1920, 1080));
+    canvas.set_scene (new GameScene (1920, 1080));
 
-    while (!canvas.step ()) {}
+    /*auto frame_time = std::chrono::microseconds ((int) (1000000.0f / 90));
+    auto start      = std::chrono::system_clock::now ();*/
+
+    int start      = SDL_GetTicks ();
+    int fps_start  = SDL_GetTicks ();
+    int   fps        = 60;
+    float frame_time = 1000.f / fps;
+
+    int frame_counter = 0;
+
+    while (true)
+    {
+        if (canvas.step ()) [[unlikely]] return 0;
+
+        // Cap to 60 FPS
+        int duration = SDL_GetTicks () - start;
+        SDL_Delay ((0 > frame_time - duration) ? 0 : (frame_time - duration));
+        start = SDL_GetTicks ();
+        frame_counter++;
+
+        // get average frame rate every second
+        if (SDL_GetTicks () - fps_start > 1000) [[unlikely]]
+        {
+            std::cout << "fps: " << frame_counter << "\r";
+            frame_counter = 0;
+            fps_start     = SDL_GetTicks ();
+        }
+
+        
+        // std::cout << 1000.f / (frame_time - duration) << "\n";
+
+
+        // Cap to 60 FPS
+        /*auto duration = (std::chrono::system_clock::now () - start);
+        std::this_thread::sleep_for (frame_time - duration);
+        start = std::chrono::system_clock::now ();
+        std::cout << std::chrono::seconds (1) / (frame_time - duration) << "\n";*/
+    }
 
     canvas.close ();
 

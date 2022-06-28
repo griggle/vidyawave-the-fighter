@@ -29,6 +29,8 @@ def draw_hitbox(image_path, frame_number=0):
 
     hiurt = 0
 
+    #return hitboxes
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

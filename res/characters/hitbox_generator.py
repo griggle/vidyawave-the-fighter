@@ -6,6 +6,7 @@ import pathlib
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
+
 common_animations = [
     "neutral",
     "crouch",
@@ -22,7 +23,7 @@ common_animations = [
 ]
 
 
-def generate_animation_atlas_and_hitbox(frames_dir, atlas_path, hitbox_path, hurtbox_path):
+def generate_animation_atlas_and_hitbox(frames_dir, hitbox_path, hurtbox_path):
     frames = [frames_dir + "/" + x.name for x in os.scandir(frames_dir) if x.is_file()
               and pathlib.Path(x.name).suffix == ".png"]
 
@@ -36,9 +37,6 @@ def generate_animation_atlas_and_hitbox(frames_dir, atlas_path, hitbox_path, hur
     hitboxes = []
     hurtboxes = []
 
-    with open(atlas_path, "w") as f:
-        f.write("")
-
     for i, frame_path in enumerate(frames):
         frame = Image.open(frame_path)
 
@@ -46,10 +44,7 @@ def generate_animation_atlas_and_hitbox(frames_dir, atlas_path, hitbox_path, hur
             print("frame size needs to be 500x600,", frame.size, "was given.")
             return
 
-        with open(atlas_path, "a") as f:
-            f.write("res/characters/" + frame_path[2:] + "\n")
-
-        hiurtboxes = [[], []]
+        hiurtboxes = draw_hitbox(frame_path, i)
 
         if hiurtboxes == "same as last":
             if len(hitboxes) > 0:
@@ -105,7 +100,6 @@ def main():
 
             generate_animation_atlas_and_hitbox(
                 "./" + character + "/animations/frames/" + animation,
-                "./" + character + "/animations/" + animation + ".atlas",
                 "./" + character + "/animations/" + animation + ".hitboxes",
                 "./" + character + "/animations/" + animation + ".hurtboxes"
             )
@@ -115,7 +109,6 @@ def main():
 
         generate_animation_atlas_and_hitbox(
             "./" + character + "/animations/frames/" + animation,
-            "./" + character + "/animations/" + animation + ".atlas",
             "./" + character + "/animations/" + animation + ".hitboxes",
             "./" + character + "/animations/" + animation + ".hurtboxes"
         )

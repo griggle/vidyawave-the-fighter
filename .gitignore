@@ -1,9 +1,16 @@
 CMakeSettings.json
 
+*.kra
+
 # deps
 deps/*
 !deps/fetch_windows_deps.bat
 !cmake_configs
+
+# generated docs
+docs/html
+docs/latex
+docs/design/*.png
 
 # protopye
 prototype

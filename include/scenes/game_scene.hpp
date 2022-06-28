@@ -1,6 +1,7 @@
 #pragma once
 
 #include "players/player.hpp"
+#include "players/john_debug.hpp"
 #include "scene.hpp"
 
 #include <SDL.h>
@@ -15,7 +16,7 @@ class GameScene : public Scene
 
     bool is_debug = false;
 
-    std::vector<Player> players;
+    std::vector<Player *> players;
 
   public:
     GameScene (int width, int height);

@@ -95,8 +95,8 @@ bool Canvas::init ()
         }
 
         // Create window
-        gWindow = SDL_CreateWindow ("Vidyawave, the Fighter", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
-                                    SDL_WINDOW_SHOWN);
+        gWindow = SDL_CreateWindow ("Vidyawave, the Fighter", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
+                                    height, SDL_WINDOW_SHOWN);
         if (gWindow == NULL)
         {
             printf ("Window could notwidth be created! SDL Error: %s\n", SDL_GetError ());
@@ -114,7 +114,7 @@ bool Canvas::init ()
             else
             {
                 // Create renderer for window
-                gRenderer = SDL_CreateRenderer (gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+                gRenderer = SDL_CreateRenderer (gWindow, -1, SDL_RENDERER_ACCELERATED);
                 if (gRenderer == NULL)
                 {
                     printf ("Renderer could not be created! SDL Error: %s\n", SDL_GetError ());
@@ -132,32 +132,32 @@ bool Canvas::init ()
     SDL_RenderSetScale (gRenderer, width / 1920.0, height / 1080.0);
     SDL_SetRenderDrawBlendMode (gRenderer, SDL_BLENDMODE_BLEND);
 
-    width = 1920;
+    width  = 1920;
     height = 1080;
 
-    //int num_joysticks = SDL_NumJoysticks ();
-    //int i;
-    //for (i = 0; i < num_joysticks; ++i)
-    //{
-    //    SDL_Joystick * js = SDL_JoystickOpen (i);
-    //    if (js)
-    //    {
-    //        SDL_JoystickGUID guid = SDL_JoystickGetGUID (js);
-    //        char             guid_str[1024];
-    //        SDL_JoystickGetGUIDString (guid, guid_str, sizeof (guid_str));
-    //        const char * name = SDL_JoystickName (js);
+    int num_joysticks = SDL_NumJoysticks ();
+    int i;
+    for (i = 0; i < num_joysticks; ++i)
+    {
+        SDL_Joystick * js = SDL_JoystickOpen (i);
+        if (js)
+        {
+            SDL_JoystickGUID guid = SDL_JoystickGetGUID (js);
+            char             guid_str[1024];
+            SDL_JoystickGetGUIDString (guid, guid_str, sizeof (guid_str));
+            const char * name = SDL_JoystickName (js);
 
-    //        int num_axes    = SDL_JoystickNumAxes (js);
-    //        int num_buttons = SDL_JoystickNumButtons (js);
-    //        int num_hats    = SDL_JoystickNumHats (js);
-    //        int num_balls   = SDL_JoystickNumBalls (js);
+            int num_axes    = SDL_JoystickNumAxes (js);
+            int num_buttons = SDL_JoystickNumButtons (js);
+            int num_hats    = SDL_JoystickNumHats (js);
+            int num_balls   = SDL_JoystickNumBalls (js);
 
-    //        printf ("%s \"%s\" axes:%d buttons:%d hats:%d balls:%d\n", guid_str, name, num_axes, num_buttons, num_hats,
-    //                num_balls);
+            printf ("%s \"%s\" axes:%d buttons:%d hats:%d balls:%d\n", guid_str, name, num_axes, num_buttons, num_hats,
+                    num_balls);
 
-    //        SDL_JoystickClose (js);
-    //    }
-    //}
+            SDL_JoystickClose (js);
+        }
+    }
 
     return success;
 }
