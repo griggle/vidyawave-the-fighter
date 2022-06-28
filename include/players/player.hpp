@@ -1,140 +1,152 @@
 #pragma once
 
 #include "SDL.h"
-#include "tools/json.hpp"
+#include "animations/h_animation.hpp"
+#include "players/states/move.hpp"
+#include "tools/input_queue.hpp"
 #include "tools/sdl_image_tools.hpp"
 
+#include <algorithm>
 #include <bitset>
 #include <cmath>
 #include <fstream>
+#include <functional>
 #include <iostream>
+#include <map>
 #include <vector>
-#include <algorithm>
 
+// // BUTTON INPUT CODES
+// States
+constexpr bool PRESSED  = true;
+constexpr bool RELEASED = false;
+// Codes
+constexpr unsigned long UP    = 1 << 0;
+constexpr unsigned long DOWN  = 1 << 1;
+constexpr unsigned long LEFT  = 1 << 2;
+constexpr unsigned long RIGHT = 1 << 3;
 
-// // MOVEMENT
-// Movement state indexes
-constexpr int NEUTRAL_STATE   = 0;
-constexpr int CROUCHING_STATE = 1;
-constexpr int AIRBORNE_STATE  = 2;
-// Transitional states
-constexpr int WALK_FORWARD_STATE      = 3;
-constexpr int WALK_BACKWARD_STATE     = 4;
-constexpr int NEUTRAL_TO_CROUCH_STATE = 5;
-constexpr int NEUTRAL_TO_AIR_STATE    = 6;
-constexpr int CROUCH_TO_NEUTRAL_STATE = 7;
+constexpr unsigned long A = 1 << 4;
+constexpr unsigned long B = 1 << 5;
+constexpr unsigned long C = 1 << 6;
+constexpr unsigned long D = 1 << 7;
 
-// // MOVES
-constexpr int MOVE_FIRST_STATE = 8;
-// Neutral move indexes
-constexpr int MOVE_A_STATE = 8;
-constexpr int MOVE_B_STATE = 9;
-constexpr int MOVE_C_STATE = 10;
-constexpr int MOVE_D_STATE = 11;
-
-struct MoveInfo
-{
-    int damage;
-
-    int startup;
-    int active;
-    int recovery;
-};
+/*
+    About the coordinate axis:                              ^ negative y-axis
+        To match SDL2's naitive                             |
+        coordinate system,              negative x-axis <---+---> positive x-axis
+        the following axes are                              |
+        used ------>                        positive y-axis V
+*/
 
 class Player
 {
   public:
-    float x = 300;    // x
-    float y;          // y dimensions
-
-    bool is_left = true;    // if this player is on the left
-
+    float x          = 0;      // x  (  <- (-x) (+x) ->  )
+    float y          = 0;      // y  (  ^  (-y) (+y)  v  )
     float max_health = 100;    // maximum health
     float health     = 100;    // current health
+
+    int i_frames = 0;    // frames until player starts to take damage again
+
+    enum Guard
+    {
+        NONE,
+        AIR,
+        MID,
+        LOW,
+    } guard
+        = NONE;    // if we will block next hit
+
+    // SDL_Rect      src_area;          // area on texture to blit from
+    SDL_Rect      dst_area = {};      // area on texture to blit from
+    SDL_Texture * texture  = NULL;    // texture atlas of all textures
 
     std::vector<SDL_Rect> hitboxes;
     std::vector<SDL_Rect> hurtboxes;
 
-    SDL_Rect      src_area;    // area on texture to blit from
-    SDL_Rect      dst_area;    // area on screen to blit to
-    SDL_Texture * texture = NULL;
+    SDL_Rect collision;    // area to collide with other players / wall with
 
-    MoveInfo move;
+    Player * other_player = NULL;
+
+    std::map<std::string, State *> states;
+    State *                        state = NULL;
 
   protected:
-    float frame_counter = 0;    // frame counter for animations
-    int   counter       = 0;    // counter for transitions and moves
+    std::string player_name;
 
-    float floor_level;    // lowest y level
+    InputQueue<128> input_history;    // last 128 inputs
+    bool            had_input_this_frame = false;
 
-    int texture_height = 600;
-    int texture_width  = 500;
+    int counter = 0;    // counter for transitions and moves
 
-    float jump_height        = 50;
-    float walk_speed         = 10;
-    float reverse_walk_speed = 5;
+    float v_x        = 0;       // velocity in x
+    float v_y        = 0;       // velocity in y
+    float gravity    = 4.5;     // acceleration under gravity in px/s^2
+    float friction   = 0.8;     // number between 0 and 1 - 1 being max
+    float ground     = 900;     // max y level
+    float left_wall  = 50;      // min x
+    float right_wall = 1870;    // max x
 
-    float v_x     = 0;
-    float v_y     = 0;    // velocity in x and y
-    float gravity = 5;    // acceleration under gravity in px/s^2
+    int texture_height = 600;    // height of each texture in atlas
+    int texture_width  = 500;    // width of each texture in atlas
 
-    std::vector<unsigned int> directional_input_history;
-    unsigned int              directional_current_input = 0;
+    float jump_v              = 50;    /// the vertical velocity applied on jump
+    float jump_forward_v      = 10;    /// the horizontal velocity applied on jump forward
+    float jump_backward_v     = 10;    /// the horizontal velocity applied on jump backward
+    float walk_forward_speed  = 8;     /// the change in x on walk forward
+    float walk_backward_speed = 4;     /// the change in x on walk backward
 
-    std::vector<unsigned int> button_input_history;
-    unsigned int              button_current_input = 0;
+    int blockstun      = 5;     /// number of frames to be stunned after a successful block
+    int knockdown_time = 60;    /// frames to stay knocked down
 
-    bool can_jump = true;    // resets on being on the ground in neutral (used to stop constant jumping on holding up)
-    int  jump_direction = 0;    // -1 left, 0 up, 1 right
-
-    int state = NEUTRAL_STATE;
-
-    std::vector<int> animation_frame_counts;
-
-    // only store x offset, y offset, width, and height
-    std::vector<std::vector<std::vector<SDL_Rect>>> state_hurtboxes;    // all hurtbox vector values for each state
-    std::vector<std::vector<std::vector<SDL_Rect>>> state_hitboxes;     // all hurtbox vector values for each state
-
-    std::vector<MoveInfo> moves;
+    bool is_left_cache = false;
 
   public:
-    Player (float floor);
+    Player (std::string player_name);
 
-    void load_textures (SDL_Renderer *);
-    void close_textures ();
+    void load_states (SDL_Renderer *);
+
+    void close ();
     void update ();
 
-    void directional_input (int up, int down, int left, int right);
-    void button_input (int x, int circle, int square, int triangle, int select, int logo, int start, int l_stick,
-                       int r_stick, int l_bumper, int r_bumper, int l_trigger, int r_trigger);
+    void input (unsigned long button, bool state);
 
-    inline bool is_crouched ();
-    inline bool is_blocking ();
-    inline bool is_airborne ();
+    void hit (Move * move);
+    bool is_left ();    // if is left-hand player on screen
 
   protected:
     void update_state ();
-    void update_moves ();
     void update_physics ();
+    void update_collision ();
     void update_hitboxes ();
-    void update_textures ();
+    void update_animation ();
 
-    inline bool input_up (unsigned int input);
-    inline bool input_down (unsigned int input);
-    inline bool input_left (unsigned int input);
-    inline bool input_right (unsigned int input);
+    bool is_pressed (unsigned long button);
+    bool is_pressed (unsigned long button, unsigned long state);
+    bool find_input_string (std::vector<unsigned long> pattern, int fuzziness = 10);
+    bool hit_check ();
 
-    inline bool input_x (unsigned int input);
-    inline bool input_circle (unsigned int input);
-    inline bool input_square (unsigned int input);
-    inline bool input_triangle (unsigned int input);
-    inline bool input_select (unsigned int input);
-    inline bool input_logo (unsigned int input);
-    inline bool input_start (unsigned int input);
-    inline bool input_l_stick (unsigned int input);
-    inline bool input_r_stick (unsigned int input);
-    inline bool input_l_bumper (unsigned int input);
-    inline bool input_r_bumper (unsigned int input);
-    inline bool input_l_trigger (unsigned int input);
-    inline bool input_r_trigger (unsigned int input);
+    virtual void update_moves () = 0;
+
+    void update_neutral ();
+    void update_crouch ();
+    void update_air ();
+
+    void update_neutral_to_crouch ();
+    void update_crouch_to_neutral ();
+
+    void update_neutral_to_air ();
+    void update_neutral_to_forward_air ();
+    void update_neutral_to_backward_air ();
+
+    void update_walk_forward ();
+    void update_walk_backward ();
+
+    void update_block_neutral ();
+    void update_block_crouch ();
+    void update_block_air ();
+
+    void update_stun ();
+    void update_knocked_down ();
+    void update_grabbed ();
 };
