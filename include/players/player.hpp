@@ -71,6 +71,11 @@ class Player
     std::map<std::string, State *> states;
     State *                        state = NULL;
 
+    float ground         = 900;     // max y level
+    float left_wall      = 50;      // min x
+    float right_wall     = 7630;    // max x
+    float max_separation = 1750;    // max distance (in x) between players
+
   protected:
     std::string player_name;
 
@@ -79,14 +84,10 @@ class Player
 
     int counter = 0;    // counter for transitions and moves
 
-    float v_x            = 0;       // velocity in x
-    float v_y            = 0;       // velocity in y
-    float gravity        = 4.5;     // acceleration under gravity in px/s^2
-    float friction       = 0.8;     // number between 0 and 1 - 1 being max
-    float ground         = 900;     // max y level
-    float left_wall      = 50;      // min x
-    float right_wall     = 7630;    // max x
-    float max_separation = 1750;    // max distance (in x) between players
+    float v_x      = 0;      // velocity in x
+    float v_y      = 0;      // velocity in y
+    float gravity  = 4.5;    // acceleration under gravity in px/s^2
+    float friction = 0.8;    // number between 0 and 1 - 1 being max
 
     int texture_height = 600;    // height of each texture in atlas
     int texture_width  = 500;    // width of each texture in atlas
