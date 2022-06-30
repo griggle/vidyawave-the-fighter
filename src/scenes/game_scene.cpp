@@ -1,11 +1,13 @@
 #include "scenes/game_scene.hpp"
 
-GameScene::GameScene (int width, int height) : Scene (width, height), ground_y (900) {}
+GameScene::GameScene (int width, int height) : Scene (width, height) {}
 
 bool GameScene::init (SDL_Renderer * renderer)
 {
     // Initialization flag
     bool success = true;
+
+    stage.load (renderer);
 
     players.push_back (new PlayerJohnDebug ());
     players.push_back (new PlayerJohnDebug ());
@@ -13,12 +15,19 @@ bool GameScene::init (SDL_Renderer * renderer)
     players.at (0)->other_player = players.at (1);
     players.at (1)->other_player = players.at (0);
 
-    players.at (0)->x = 1200;
-    players.at (1)->x = 500;
-    players.at (0)->y = ground_y;
-    players.at (1)->y = ground_y;
+    players.at (0)->x = ((stage.right_wall - stage.left_wall) / 2) - 300;
+    players.at (1)->x = ((stage.right_wall - stage.left_wall) / 2) + 300;
 
-    for (auto & player : players) player->load_states (renderer);
+    for (auto & player : players)
+    {
+        player->ground         = stage.ground_y;
+        player->y              = stage.ground_y;
+        player->left_wall      = stage.left_wall;
+        player->right_wall     = stage.right_wall;
+        player->max_separation = stage.tex_height;
+
+        player->load_states (renderer);
+    }
 
     return success;
 }
@@ -209,10 +218,17 @@ void GameScene::step_scene ()
 {
     // player logic
     for (auto & player : players) player->update ();
+
+    stage.update_viewport (players[0], players[1]);
 }
 
 void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int & width, int & height)
 {
+    // draw stage
+    SDL_RenderCopy (renderer, stage.texture, &stage.src_rect, &stage.dst_rect);
+
+    // std::cout << players[0]->x << "," << players[1]->x << "\n";
+
     // draw players
     for (auto & player : players)
     {
@@ -220,49 +236,69 @@ void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int &
         SDL_SetRenderDrawColor (renderer, 0, 0, 180, 0xFF);
         SDL_RendererFlip flip = {};
         if (!player->is_left ()) flip = SDL_FLIP_HORIZONTAL;
-        SDL_RenderCopyEx (renderer, player->texture, NULL, &player->dst_area, 0, NULL, flip);
+        auto dest = stage.project_rect (player->dst_area);
+        SDL_RenderCopyEx (renderer, player->texture, NULL, &dest, 0, NULL, flip);
 
-        if (is_debug)
-        {
-            // // Debug lines
-            // hit and hurtboxes
-            SDL_RenderDrawRect (renderer, &player->dst_area);
-            SDL_SetRenderDrawColor (renderer, 180, 180, 0, 0xFF);
-            SDL_RenderDrawRect (renderer, &player->collision);
+        if (is_debug) [[unlikely]]
+            {
+                // // Debug lines
+                // hit and hurtboxes
+                dest = stage.project_rect (player->dst_area);
+                SDL_RenderDrawRect (renderer, &dest);
+                SDL_SetRenderDrawColor (renderer, 180, 180, 0, 0xFF);
+                dest = stage.project_rect (player->collision);
+                SDL_RenderDrawRect (renderer, &dest);
 
-            // floor and walls
-            SDL_SetRenderDrawColor (renderer, 40, 40, 0, 0xFF);
-            SDL_RenderDrawLine (renderer, 0, ground_y, width, ground_y);
-            SDL_RenderDrawLine (renderer, 50, 0, 50, height);
-            SDL_RenderDrawLine (renderer, 1870, 0, 1870, height);
+                // floor and walls
+                SDL_SetRenderDrawColor (renderer, 40, 40, 0, 0xFF);
+                SDL_RenderDrawLine (renderer, 0, stage.ground_y, width, stage.ground_y);
+                SDL_RenderDrawLine (renderer, 50, 0, 50, height);
+                SDL_RenderDrawLine (renderer, 1870, 0, 1870, height);
 
-            // player position
-            SDL_SetRenderDrawColor (renderer, 255, 255, 255, 0xFF);
-            SDL_RenderDrawLine (renderer, player->x + 10, player->y, player->x - 10, player->y);
-            SDL_RenderDrawLine (renderer, player->x, player->y + 10, player->x, player->y - 10);
+                // player position
+                dest = stage.project_rect ({(int) player->x, (int) player->y, 0, 0});
+                SDL_SetRenderDrawColor (renderer, 255, 255, 255, 0xFF);
+                SDL_RenderDrawLine (renderer, dest.x + 10, dest.y, dest.x - 10, dest.y);
+                SDL_RenderDrawLine (renderer, dest.x, dest.y + 10, dest.x, dest.y - 10);
 
 
-            // player hurtboxes
-            if (player->guard == Player::NONE)
-                SDL_SetRenderDrawColor (renderer, 0, 180, 0, 40);
-            else
-                SDL_SetRenderDrawColor (renderer, 0, 180, 180, 40);
+                // player hurtboxes
+                if (player->guard == Player::NONE)
+                    SDL_SetRenderDrawColor (renderer, 0, 180, 0, 40);
+                else
+                    SDL_SetRenderDrawColor (renderer, 0, 180, 180, 40);
 
-            for (auto & hurtbox : player->hurtboxes) { SDL_RenderFillRect (renderer, &hurtbox); }
-            
-            if (player->guard == Player::NONE)
-                SDL_SetRenderDrawColor (renderer, 0, 180, 0, 255);
-            else
-                SDL_SetRenderDrawColor (renderer, 0, 180, 180, 255);
+                for (auto & hurtbox : player->hurtboxes)
+                {
+                    dest = stage.project_rect (hurtbox);
+                    SDL_RenderFillRect (renderer, &dest);
+                }
 
-            for (auto & hurtbox : player->hurtboxes) { SDL_RenderDrawRect (renderer, &hurtbox); }
+                if (player->guard == Player::NONE)
+                    SDL_SetRenderDrawColor (renderer, 0, 180, 0, 255);
+                else
+                    SDL_SetRenderDrawColor (renderer, 0, 180, 180, 255);
 
-            // player hitboxes
-            SDL_SetRenderDrawColor (renderer, 180, 0, 0, 40);
-            for (auto & hitbox : player->hitboxes) { SDL_RenderFillRect (renderer, &hitbox); }
-            SDL_SetRenderDrawColor (renderer, 180, 0, 0, 255);
-            for (auto & hitbox : player->hitboxes) { SDL_RenderDrawRect (renderer, &hitbox); }
-        }
+                for (auto & hurtbox : player->hurtboxes)
+                {
+                    dest = stage.project_rect (hurtbox);
+                    SDL_RenderDrawRect (renderer, &dest);
+                }
+
+                // player hitboxes
+                SDL_SetRenderDrawColor (renderer, 180, 0, 0, 40);
+                for (auto & hitbox : player->hitboxes)
+                {
+                    dest = stage.project_rect (hitbox);
+                    SDL_RenderFillRect (renderer, &dest);
+                }
+                SDL_SetRenderDrawColor (renderer, 180, 0, 0, 255);
+                for (auto & hitbox : player->hitboxes)
+                {
+                    dest = stage.project_rect (hitbox);
+                    SDL_RenderDrawRect (renderer, &dest);
+                }
+            }
     }
 
     // draw UI
@@ -287,4 +323,75 @@ void GameScene::close ()
         player->close ();
         delete player;
     }
+
+    stage.close ();
+}
+
+Stage::Stage (std::string texture_path, int left_wall, int right_wall, int ground_y)
+    : texture_path (texture_path), left_wall (left_wall), right_wall (right_wall), ground_y (ground_y)
+{
+}
+
+void Stage::load (SDL_Renderer * renderer)
+{
+    texture = IMG_LoadTexture (renderer, "res/stages/debug_city/frames/0000.png");
+
+    SDL_QueryTexture (texture, NULL, NULL, &tex_width, &tex_height);
+}
+
+void Stage::close ()
+{
+    SDL_DestroyTexture (texture);
+    texture = NULL;
+}
+
+SDL_Rect Stage::project_rect (SDL_Rect in)
+{
+    SDL_Rect ret = SDL_Rect {in.x - viewport.x, in.y, in.w, in.h};
+
+    ret.x = ((ret.x + (in.w / 2.0)) * viewport_sf);
+    ret.y = ((ret.y + (in.h) - ground_y) * viewport_sf);
+    ret.w *= viewport_sf;
+    ret.h *= viewport_sf;
+
+    ret.x -= (ret.w / 2.0);
+    ret.y -= ret.h - ground_y;
+
+    return ret;
+}
+
+void Stage::update_viewport (Player * p1, Player * p2)
+{
+    int width  = std::max (1280, (int) std::fabs (p1->x - p2->x) + 400);
+    int height = width * (9 / 16.0);
+
+    viewport_sf = 1920.0 / width;
+
+    int x = ((p1->x + p2->x) / 2) - (width / 2);
+    if (x < 0) x = 0;
+    if (x > tex_width - width) x = tex_width - width;
+    int y = tex_height - height;
+
+    /*std::cout << x << "," << y << "," << width << "," << height << "," << viewport_sf << ","
+              << std::fabs ((y / (tex_height * 2.0))) << "\n";*/
+
+
+    src_rect = SDL_Rect {x, std::max (0, y - (int) (180 - (180 / viewport_sf))), width, height};
+    dst_rect = SDL_Rect {0, 0, 1920, 1080};
+
+    if (y < 0)
+    {
+        dst_rect.y = (int) (1080 * std::fabs ((y / (tex_height * 2.0))));
+        dst_rect.h = 1080 - (int) (1080 * std::fabs ((y / (tex_height * 2.0))));
+    }
+
+    if (x < 0)
+    {
+        dst_rect.x = (int) (1920 * std::fabs ((x / (tex_width * 2.0))));
+        dst_rect.w = 1920 - (int) (1920 * std::fabs ((x / (tex_width * 2.0))));
+    }
+
+    if ((int) (190 - (190 / viewport_sf)) < 0) { dst_rect.y += (1080.0 / height) * (int) (190 - (190 / viewport_sf)); }
+
+    viewport = SDL_Rect {x, y, width, height};
 }

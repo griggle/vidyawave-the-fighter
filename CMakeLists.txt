@@ -124,9 +124,11 @@ else ()
 endif ()
 
     add_custom_command(TARGET Vidyawave_The_Fighter POST_BUILD 
-        COMMAND (robocopy /s /xo
+        COMMAND (robocopy /s /xo 
             "${PROJECT_SOURCE_DIR}/res" 
-            $<TARGET_FILE_DIR:Vidyawave_The_Fighter>/res) ^& IF %ERRORLEVEL% LEQ 1 exit 0
+            $<TARGET_FILE_DIR:Vidyawave_The_Fighter>/res 
+            /xd "files" "__pycache__" /xf "*.py" "*.cmd" "info.png" )
+            ^& IF %ERRORLEVEL% LEQ 1 exit 0
     )
 
 else ()

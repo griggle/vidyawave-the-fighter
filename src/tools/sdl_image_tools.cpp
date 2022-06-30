@@ -8,11 +8,11 @@ SDL_Texture * IMG_LoadTexture (SDL_Renderer * renderer, const char * file)
     {
         texture = SDL_CreateTextureFromSurface (renderer, surface);
         SDL_FreeSurface (surface);
-        if (!texture) { std::cerr << "unable to load texture: " << file << SDL_GetError () << "\n"; }
+        if (!texture) { std::cerr << "unable to create texture: " << file << SDL_GetError () << "\n"; }
     }
     else
     {
-        std::cerr << "unable to load texture: " << file << "\n";
+        std::cerr << "unable to create surface from file: " << file << ", error:" << SDL_GetError () << file << "\n";
     }
     return texture;
 }

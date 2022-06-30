@@ -1,6 +1,7 @@
 CMakeSettings.json
 
 *.kra
+res/**/files
 
 # deps
 deps/*
