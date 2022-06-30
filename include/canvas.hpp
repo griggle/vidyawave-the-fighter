@@ -1,10 +1,11 @@
 #pragma once
 
+#include "SDL.h"
+#include "SDL_image.h"
+#include "SDL_mixer.h"
 #include "scenes/game_scene.hpp"
 #include "scenes/scene.hpp"
 
-#include <SDL.h>
-#include <SDL_image.h>
 #include <cmath>
 #include <stdio.h>
 #include <string>
@@ -23,6 +24,9 @@ class Canvas
     SDL_Event e;       // Event handler
 
     Scene * current_scene;    // The current scene
+
+    // The music that will be played
+    Mix_Music * gMusic = NULL;
 
   public:
     Canvas (int width, int height);

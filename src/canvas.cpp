@@ -58,8 +58,14 @@ void Canvas::close ()
     SDL_JoystickClose (gGameController);
     gGameController = NULL;
 
+    // Free the music
+    Mix_FreeMusic (gMusic);
+    gMusic = NULL;
+
     // Quit SDL subsystems
     SDL_Quit ();
+    IMG_Quit ();
+    Mix_Quit ();
 }
 
 void Canvas::screen_shot ()
@@ -77,7 +83,7 @@ bool Canvas::init ()
     bool success = true;
 
     // Initialize SDL
-    if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
+    if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_AUDIO) < 0)
     {
         printf ("SDL could not initialize! SDL Error: %s\n", SDL_GetError ());
         success = false;
@@ -94,12 +100,25 @@ bool Canvas::init ()
             { printf ("Warning: Unable to open game controller! SDL Error: %s\n", SDL_GetError ()); }
         }
 
+        // Initialize SDL_mixer
+        if (Mix_Init (MIX_INIT_OGG) < 0)
+        {
+            printf ("SDL Mixer could not initialize! SDL Error: %s\n", Mix_GetError ());
+            success = false;
+        }
+
+        if (Mix_OpenAudio (MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, MIX_DEFAULT_CHANNELS, 2048) < 0)
+        {
+            printf ("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError ());
+            success = false;
+        }
+
         // Create window
         gWindow = SDL_CreateWindow ("Vidyawave, the Fighter", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
                                     height, SDL_WINDOW_SHOWN);
         if (gWindow == NULL)
         {
-            printf ("Window could notwidth be created! SDL Error: %s\n", SDL_GetError ());
+            printf ("Window could not be created! SDL Error: %s\n", SDL_GetError ());
             success = false;
         }
         else
@@ -128,6 +147,18 @@ bool Canvas::init ()
             }
         }
     }
+
+
+
+    // Load music
+    gMusic = Mix_LoadMUS ("res/songs/test.mp3");
+    if (gMusic == NULL)
+    {
+        printf ("Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError ());
+        success = false;
+    }
+    Mix_PlayMusic (gMusic, -1);
+
 
     SDL_RenderSetScale (gRenderer, width / 1920.0, height / 1080.0);
     SDL_SetRenderDrawBlendMode (gRenderer, SDL_BLENDMODE_BLEND);

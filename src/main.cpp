@@ -1,6 +1,6 @@
+#include "SDL_net.h"
 #include "canvas.hpp"
 
-#include <SDL_net.h>
 #include <chrono>
 #include <iostream>
 #include <queue>
@@ -25,8 +25,8 @@ int main (int argc, char * args[])
     /*auto frame_time = std::chrono::microseconds ((int) (1000000.0f / 90));
     auto start      = std::chrono::system_clock::now ();*/
 
-    int start      = SDL_GetTicks ();
-    int fps_start  = SDL_GetTicks ();
+    int   start      = SDL_GetTicks ();
+    int   fps_start  = SDL_GetTicks ();
     int   fps        = 60;
     float frame_time = 1000.f / fps;
 
@@ -44,13 +44,13 @@ int main (int argc, char * args[])
 
         // get average frame rate every second
         if (SDL_GetTicks () - fps_start > 1000) [[unlikely]]
-        {
-            std::cout << "fps: " << frame_counter << "\r";
-            frame_counter = 0;
-            fps_start     = SDL_GetTicks ();
-        }
+            {
+                std::cout << "fps: " << frame_counter << "\r";
+                frame_counter = 0;
+                fps_start     = SDL_GetTicks ();
+            }
 
-        
+
         // std::cout << 1000.f / (frame_time - duration) << "\n";
 
 
