@@ -98,7 +98,7 @@ void Player::input (unsigned long button, bool state)
 void Player::hit (Move * move)
 {
     // cannot block a grab
-    if (move->is_grab)
+    if (!move->is_grab)
     {
         // if blocked
         if (guard == AIR && move->move_area == Move::AIR)
@@ -160,8 +160,7 @@ void Player::update_state ()
 void Player::update_physics ()
 {
     // apply gravity and momentum to the player
-    x += v_x;
-    y += -v_y;
+    move (v_x, -v_y);
 
     v_y -= gravity;
 
@@ -290,6 +289,15 @@ bool Player::is_left ()
     return is_left_cache;
 }
 
+void Player::move (float dx, float dy)
+{
+    if (std::fabs (x + dx - other_player->x) < max_separation)
+    {
+        x += dx;
+        y += dy;
+    }
+}
+
 bool Player::find_input_string (std::vector<unsigned long> pattern, int fuzziness)
 {
     int  current_history_index    = 0;
@@ -338,7 +346,7 @@ bool Player::hit_check ()
 void Player::update_neutral ()
 {
     // crouching
-    if (is_pressed (DOWN))
+    if (is_pressed (DOWN))  
     {
         state   = states["neutral_to_crouch"];
         counter = 0;
@@ -444,7 +452,7 @@ void Player::update_walk_forward ()
     // everything you can do while walking can be done in neutral
     update_neutral ();
 
-    if (is_pressed (is_left () ? RIGHT : LEFT)) { x += is_left () ? walk_forward_speed : -walk_forward_speed; }
+    if (is_pressed (is_left () ? RIGHT : LEFT)) { move(is_left () ? walk_forward_speed : -walk_forward_speed, 0); }
     else
     {
         state = states["neutral"];
@@ -458,7 +466,7 @@ void Player::update_walk_backward ()
 
     if (is_pressed (is_left () ? LEFT : RIGHT))
     {
-        x += is_left () ? -walk_backward_speed : walk_backward_speed;
+        move( is_left () ? -walk_backward_speed : walk_backward_speed, 0);
         guard = MID;
     }
     else
