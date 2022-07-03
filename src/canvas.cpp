@@ -38,7 +38,7 @@ bool Canvas::step ()
     SDL_RenderClear (gRenderer);
 
     // Draw pixels
-    current_scene->step_render (gWindow, gRenderer, width, height);
+    current_scene->step_render (gWindow, gRenderer);
 
     // Update screen
     SDL_RenderPresent (gRenderer);
@@ -66,6 +66,7 @@ void Canvas::close ()
     SDL_Quit ();
     IMG_Quit ();
     Mix_Quit ();
+    SDLNet_Quit ();
 }
 
 void Canvas::screen_shot ()
@@ -113,6 +114,13 @@ bool Canvas::init ()
             success = false;
         }
 
+        /* Initialize SDL_net */
+        if (SDLNet_Init () < 0)
+        {
+            fprintf (stderr, "SDLNet_Init: %s\n", SDLNet_GetError ());
+            exit (EXIT_FAILURE);
+        }
+
         // Create window
         gWindow = SDL_CreateWindow ("Vidyawave, the Fighter", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
                                     height, SDL_WINDOW_SHOWN);
@@ -148,8 +156,6 @@ bool Canvas::init ()
         }
     }
 
-
-
     // Load music
     gMusic = Mix_LoadMUS ("res/songs/test.mp3");
     if (gMusic == NULL)
@@ -157,7 +163,7 @@ bool Canvas::init ()
         printf ("Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError ());
         success = false;
     }
-    Mix_PlayMusic (gMusic, -1);
+    //Mix_PlayMusic (gMusic, -1);
 
 
     SDL_RenderSetScale (gRenderer, width / 1920.0, height / 1080.0);

@@ -1,14 +1,21 @@
 #include "scenes/game_scene.hpp"
 
-GameScene::GameScene (int width, int height) : Scene (width, height) {}
+GameScene::GameScene () : Scene () {}
 
 bool GameScene::init (SDL_Renderer * renderer)
 {
     // Initialization flag
     bool success = true;
 
+    // change to loading screen
+    loading_screen = IMG_LoadTexture (renderer, "res/ui/loading_screen.png");
+    SDL_RenderCopy (renderer, loading_screen, NULL, NULL);
+    SDL_RenderPresent (renderer);
+
+    // load stage
     stage.load (renderer);
 
+    // load players
     players.push_back (new PlayerJohnDebug ());
     players.push_back (new PlayerJohnDebug ());
 
@@ -220,9 +227,11 @@ void GameScene::step_scene ()
     for (auto & player : players) player->update ();
 
     stage.update_viewport (players[0], players[1]);
+
+    frame_time++;
 }
 
-void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int & width, int & height)
+void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer)
 {
     // draw stage
     SDL_RenderCopy (renderer, stage.texture, &stage.src_rect, &stage.dst_rect);
@@ -325,6 +334,9 @@ void GameScene::close ()
     }
 
     stage.close ();
+
+    SDL_DestroyTexture (loading_screen);
+    loading_screen = NULL;
 }
 
 Stage::Stage (std::string texture_path, int left_wall, int right_wall, int ground_y)

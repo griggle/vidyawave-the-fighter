@@ -1,11 +1,13 @@
 #pragma once
 
+#include "SDL.h"
+#include "SDL_net.h"
 #include "animations/animation.hpp"
 #include "players/john_debug.hpp"
 #include "players/player.hpp"
 #include "scene.hpp"
+#include "networking/match_packet.hpp"
 
-#include <SDL.h>
 #include <iostream>
 
 class Stage
@@ -14,10 +16,10 @@ class Stage
     SDL_Texture * texture;
     std::string   texture_path;
 
-    SDL_Rect viewport;          /// rect in world space that represents the screen
-    SDL_Rect src_rect;    /// the area of the texture to use
-    SDL_Rect dst_rect;    /// the rect that viewport maps to in camera space
-    float    viewport_sf;       /// how much bigger / smaller the view is compared to 1080p
+    SDL_Rect viewport;       /// rect in world space that represents the screen
+    SDL_Rect src_rect;       /// the area of the texture to use
+    SDL_Rect dst_rect;       /// the rect that viewport maps to in camera space
+    float    viewport_sf;    /// how much bigger / smaller the view is compared to 1080p
 
     int left_wall;
     int right_wall;
@@ -49,13 +51,17 @@ class GameScene : public Scene
 
     Stage stage;
 
+    int current_player = 0;
+    Uint8 frame_time     = 0;
+
+    SDL_Texture * loading_screen = NULL;
+
   public:
-    GameScene (int width, int height);
+    GameScene ();
 
     bool init (SDL_Renderer *);         // init canvas and memory
     bool step_event (SDL_Event & e);    // run a frame
     void step_scene ();                 // update internal state
-    void step_render (SDL_Window *, SDL_Renderer *, int & width,
-                      int & height);    // run a frame
+    void step_render (SDL_Window *, SDL_Renderer *);    // run a frame
     void close ();                      // free all memory
 };

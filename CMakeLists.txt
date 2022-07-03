@@ -31,7 +31,10 @@ include_directories(${SDL2_net_INCLUDE_DIRS})
 find_package(SDL2_mixer REQUIRED)
 include_directories(${SDL2_mixer_INCLUDE_DIRS})
 
-# add the executable
+#######################################################################################################################
+#                                                       CLIENT                                                        #
+#######################################################################################################################
+
 add_executable(Vidyawave_The_Fighter "")
 
 # todo: figure out how do switch builds on debug / release
@@ -125,4 +128,49 @@ else ()
             $<TARGET_FILE_DIR:Vidyawave_The_Fighter>
     )
 
+endif(WIN32)
+
+#######################################################################################################################
+#                                                       SERVER                                                        #
+#######################################################################################################################
+
+add_executable(VtF_Server "src/networking/server_main.cpp")
+
+target_include_directories(VtF_Server PRIVATE include)
+
+target_link_libraries(VtF_Server ${SDL2_LIBRARIES})
+target_link_libraries(VtF_Server ${SDL2_net_LIBRARIES})
+
+
+if (WIN32)
+if (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
+    add_custom_command(TARGET VtF_Server POST_BUILD 
+        COMMAND (robocopy /s /xo 
+            "${PROJECT_SOURCE_DIR}/${SDL2_DIR}/lib/x64" 
+            $<TARGET_FILE_DIR:VtF_Server> > nul)
+            ^& IF %ERRORLEVEL% LEQ 1 verify >nul
+    )
+
+    add_custom_command(TARGET VtF_Server POST_BUILD 
+        COMMAND (robocopy /s /xo 
+            "${PROJECT_SOURCE_DIR}/${SDL2_net_DIR}/lib/x64" 
+            $<TARGET_FILE_DIR:VtF_Server> > nul)
+            ^& IF %ERRORLEVEL% LEQ 1 verify >nul
+    )
+
+else ()
+    add_custom_command(TARGET VtF_Server POST_BUILD 
+        COMMAND (robocopy /s /xo 
+            "${PROJECT_SOURCE_DIR}/${SDL2_DIR}/lib/x86" 
+            $<TARGET_FILE_DIR:VtF_Server> > nul)
+            ^& IF %ERRORLEVEL% LEQ 1 verify >nul
+    )
+
+    add_custom_command(TARGET VtF_Server POST_BUILD 
+        COMMAND (robocopy /s /xo 
+            "${PROJECT_SOURCE_DIR}/${SDL2_net_DIR}/lib/x86" 
+            $<TARGET_FILE_DIR:VtF_Server> > nul)
+            ^& IF %ERRORLEVEL% LEQ 1 verify >nul
+    )
+endif ()
 endif(WIN32)

@@ -95,6 +95,28 @@ void Player::input (unsigned long button, bool state)
     had_input_this_frame = true;
 }
 
+void Player::change_state (std::string name)
+{
+    if (states.find (name) != states.end ())
+        if (state->name != name)
+        {
+            state = states[name];
+
+            // do physics step for gravity, etc...
+            if (state->name != "grabbed" && state->state_type != State::MOVE_GRAB
+                && state->state_type != State::MOVE_COMMAND_GRAB)
+                update_physics ();
+
+            // update the animation with a new frame (and accompanying collision & hitboxes)
+            if (state->name != "grabbed" && state->state_type != State::MOVE_GRAB
+                && state->state_type != State::MOVE_COMMAND_GRAB)
+                update_collision ();
+
+            update_animation ();
+            update_hitboxes ();
+        }
+}
+
 void Player::hit (Move * move)
 {
     // cannot block a grab
@@ -149,12 +171,14 @@ void Player::hit (Move * move)
 void Player::update_state ()
 {
     // moves overide all movement inputs
-    update_moves ();
+    if (state->name != "grabbed" && state->state_type != State::MOVE_GRAB
+        && state->state_type != State::MOVE_COMMAND_GRAB)
+        update_moves ();
 
     // update this state
     state->update_function ();
 
-    std::cout << state->name << "                \r";
+    // std::cout << state->name << "                \r";
 }
 
 void Player::update_physics ()
@@ -346,7 +370,7 @@ bool Player::hit_check ()
 void Player::update_neutral ()
 {
     // crouching
-    if (is_pressed (DOWN))  
+    if (is_pressed (DOWN))
     {
         state   = states["neutral_to_crouch"];
         counter = 0;
@@ -452,7 +476,7 @@ void Player::update_walk_forward ()
     // everything you can do while walking can be done in neutral
     update_neutral ();
 
-    if (is_pressed (is_left () ? RIGHT : LEFT)) { move(is_left () ? walk_forward_speed : -walk_forward_speed, 0); }
+    if (is_pressed (is_left () ? RIGHT : LEFT)) { move (is_left () ? walk_forward_speed : -walk_forward_speed, 0); }
     else
     {
         state = states["neutral"];
@@ -466,7 +490,7 @@ void Player::update_walk_backward ()
 
     if (is_pressed (is_left () ? LEFT : RIGHT))
     {
-        move( is_left () ? -walk_backward_speed : walk_backward_speed, 0);
+        move (is_left () ? -walk_backward_speed : walk_backward_speed, 0);
         guard = MID;
     }
     else
@@ -521,4 +545,9 @@ void Player::update_knocked_down ()
     }
 }
 
-void Player::update_grabbed () {}
+void Player::update_grabbed ()
+{
+    if (other_player->state->state_type != State::MOVE_GRAB
+        && other_player->state->state_type != State::MOVE_COMMAND_GRAB)
+        state = states["neutral"];
+}

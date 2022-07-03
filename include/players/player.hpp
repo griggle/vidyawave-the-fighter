@@ -76,13 +76,13 @@ class Player
     float right_wall     = 7630;    // max x
     float max_separation = 1750;    // max distance (in x) between players
 
+    int counter = 0;    // counter for transitions and moves
+
   protected:
     std::string player_name;
 
     InputQueue<128> input_history;    // last 128 inputs
     bool            had_input_this_frame = false;
-
-    int counter = 0;    // counter for transitions and moves
 
     float v_x      = 0;      // velocity in x
     float v_y      = 0;      // velocity in y
@@ -112,6 +112,7 @@ class Player
     void update ();
 
     void input (unsigned long button, bool state);
+    void change_state (std::string name);
 
     void hit (Move * move);
     bool is_left ();                   // if is left-hand player on screen
