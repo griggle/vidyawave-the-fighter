@@ -1,14 +1,21 @@
 #include "scenes/game_scene.hpp"
 
-GameScene::GameScene (int width, int height) : Scene (width, height) {}
+GameScene::GameScene () : Scene () {}
 
 bool GameScene::init (SDL_Renderer * renderer)
 {
     // Initialization flag
     bool success = true;
 
+    // change to loading screen
+    loading_screen = IMG_LoadTexture (renderer, "res/ui/loading_screen.png");
+    SDL_RenderCopy (renderer, loading_screen, NULL, NULL);
+    SDL_RenderPresent (renderer);
+
+    // load stage
     stage.load (renderer);
 
+    // load players
     players.push_back (new PlayerJohnDebug ());
     players.push_back (new PlayerJohnDebug ());
 
@@ -27,65 +34,6 @@ bool GameScene::init (SDL_Renderer * renderer)
         player->max_separation = stage.tex_height;
 
         player->load_states (renderer);
-    }
-
-    // networking
-    /* Open a socket on random port */
-    if (!(sd = SDLNet_UDP_Open (0)))
-    {
-        fprintf (stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError ());
-        exit (EXIT_FAILURE);
-    }
-
-    /* Resolve server name */
-    if (SDLNet_ResolveHost (&srvadd, "127.0.0.1", 9600))
-    {
-        fprintf (stderr, "SDLNet_ResolveHost(%s %d): %s\n", "127.0.0.1", 9600, SDLNet_GetError ());
-        exit (EXIT_FAILURE);
-    }
-
-    /* Allocate memory for the packet */
-    if (!(p_out = SDLNet_AllocPacket (512)))
-    {
-        fprintf (stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError ());
-        exit (EXIT_FAILURE);
-    }
-
-    /* Allocate memory for the packet */
-    if (!(p_in = SDLNet_AllocPacket (512)))
-    {
-        fprintf (stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError ());
-        exit (EXIT_FAILURE);
-    }
-
-    p_out->data = (Uint8 *) "sync_me";
-
-    p_out->address.host = srvadd.host; /* Set the destination host */
-    p_out->address.port = srvadd.port; /* And destination port */
-
-    p_out->len = strlen ((char *) p_out->data) + 1;
-    SDLNet_UDP_Send (sd, -1, p_out); /* This sets the p->channel */
-
-    printf ("sent sync_me\n");
-    printf ("listening for server reply...  ");
-
-    while (true)
-    {
-        if (SDLNet_UDP_Recv (sd, p_in) && p_in->address.host == srvadd.host && p_in->address.port == srvadd.port)
-        {
-            printf ("%s\n", (char *) p_in->data);
-
-            if (strcmp ((char *) p_in->data, "player_1") == 0)
-            {
-                current_player = 0;
-                break;
-            }
-            if (strcmp ((char *) p_in->data, "player_2") == 0)
-            {
-                current_player = 1;
-                break;
-            }
-        }
     }
 
     return success;
@@ -280,29 +228,10 @@ void GameScene::step_scene ()
 
     stage.update_viewport (players[0], players[1]);
 
-    // network
-    MatchPacket packet_data = {frame_time, players[current_player]->x, players[current_player]->y};
-    p_out->address.host     = srvadd.host;
-    p_out->address.port     = srvadd.port;
-    p_out->data             = (Uint8 *) &packet_data;
-    p_out->len              = sizeof (packet_data) + 1;
-
-    SDLNet_UDP_Send (sd, -1, p_out); /* This sets the p->channel */
-
-    // recieve
-    while (SDLNet_UDP_Recv (sd, p_in))
-    {
-        std::cout << "current frame time difference = " << frame_time - ((MatchPacket *) p_in->data)->frame_time
-                  << "        \r";
-
-        players[current_player == 0 ? 1 : 0]->x = ((MatchPacket *) p_in->data)->x;
-        players[current_player == 0 ? 1 : 0]->y = ((MatchPacket *) p_in->data)->y;
-    }
-
     frame_time++;
 }
 
-void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer, int & width, int & height)
+void GameScene::step_render (SDL_Window * window, SDL_Renderer * renderer)
 {
     // draw stage
     SDL_RenderCopy (renderer, stage.texture, &stage.src_rect, &stage.dst_rect);
@@ -406,8 +335,8 @@ void GameScene::close ()
 
     stage.close ();
 
-    SDLNet_FreePacket (p_in);
-    SDLNet_FreePacket (p_out);
+    SDL_DestroyTexture (loading_screen);
+    loading_screen = NULL;
 }
 
 Stage::Stage (std::string texture_path, int left_wall, int right_wall, int ground_y)

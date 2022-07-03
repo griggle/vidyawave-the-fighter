@@ -38,7 +38,7 @@ bool Canvas::step ()
     SDL_RenderClear (gRenderer);
 
     // Draw pixels
-    current_scene->step_render (gWindow, gRenderer, width, height);
+    current_scene->step_render (gWindow, gRenderer);
 
     // Update screen
     SDL_RenderPresent (gRenderer);
@@ -155,8 +155,6 @@ bool Canvas::init ()
             }
         }
     }
-
-
 
     // Load music
     gMusic = Mix_LoadMUS ("res/songs/test.mp3");

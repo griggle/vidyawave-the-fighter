@@ -99,6 +99,8 @@ void PlayerJohnDebug::update_c_grab ()
     other_player->x = hitboxes.at (0).x;
     other_player->y = hitboxes.at (0).y + 100;
 
+    other_player->state->stun_frames++;
+
     if (counter >= state->size ())
     { 
         other_player->hit (s);

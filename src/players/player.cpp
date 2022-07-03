@@ -97,7 +97,24 @@ void Player::input (unsigned long button, bool state)
 
 void Player::change_state (std::string name)
 {
-    if (states.find (name) != states.end ()) state = states[name];
+    if (states.find (name) != states.end ())
+        if (state->name != name)
+        {
+            state = states[name];
+
+            // do physics step for gravity, etc...
+            if (state->name != "grabbed" && state->state_type != State::MOVE_GRAB
+                && state->state_type != State::MOVE_COMMAND_GRAB)
+                update_physics ();
+
+            // update the animation with a new frame (and accompanying collision & hitboxes)
+            if (state->name != "grabbed" && state->state_type != State::MOVE_GRAB
+                && state->state_type != State::MOVE_COMMAND_GRAB)
+                update_collision ();
+
+            update_animation ();
+            update_hitboxes ();
+        }
 }
 
 void Player::hit (Move * move)
@@ -154,12 +171,14 @@ void Player::hit (Move * move)
 void Player::update_state ()
 {
     // moves overide all movement inputs
-    update_moves ();
+    if (state->name != "grabbed" && state->state_type != State::MOVE_GRAB
+        && state->state_type != State::MOVE_COMMAND_GRAB)
+        update_moves ();
 
     // update this state
     state->update_function ();
 
-    std::cout << state->name << "                \r";
+    // std::cout << state->name << "                \r";
 }
 
 void Player::update_physics ()
@@ -526,4 +545,9 @@ void Player::update_knocked_down ()
     }
 }
 
-void Player::update_grabbed () {}
+void Player::update_grabbed ()
+{
+    if (other_player->state->state_type != State::MOVE_GRAB
+        && other_player->state->state_type != State::MOVE_COMMAND_GRAB)
+        state = states["neutral"];
+}

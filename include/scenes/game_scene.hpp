@@ -51,21 +51,17 @@ class GameScene : public Scene
 
     Stage stage;
 
-    UDPsocket   sd;
-    IPaddress   srvadd;
-    UDPpacket * p_out;
-    UDPpacket * p_in;
-
     int current_player = 0;
     Uint8 frame_time     = 0;
 
+    SDL_Texture * loading_screen = NULL;
+
   public:
-    GameScene (int width, int height);
+    GameScene ();
 
     bool init (SDL_Renderer *);         // init canvas and memory
     bool step_event (SDL_Event & e);    // run a frame
     void step_scene ();                 // update internal state
-    void step_render (SDL_Window *, SDL_Renderer *, int & width,
-                      int & height);    // run a frame
+    void step_render (SDL_Window *, SDL_Renderer *);    // run a frame
     void close ();                      // free all memory
 };

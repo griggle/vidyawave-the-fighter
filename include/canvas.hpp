@@ -4,6 +4,7 @@
 #include "SDL_image.h"
 #include "SDL_mixer.h"
 #include "scenes/game_scene.hpp"
+#include "scenes/online_game_scene.hpp"
 #include "scenes/scene.hpp"
 
 #include <cmath>

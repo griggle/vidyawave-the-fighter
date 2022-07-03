@@ -127,7 +127,7 @@ int main (int argc, char * args[])
     Canvas canvas (width, height);
 
     canvas.init ();
-    canvas.set_scene (new GameScene (1920, 1080));
+    canvas.set_scene (new GameScene ());
 
     /*auto frame_time = std::chrono::microseconds ((int) (1000000.0f / 90));
     auto start      = std::chrono::system_clock::now ();*/
