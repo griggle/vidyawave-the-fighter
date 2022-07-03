@@ -95,6 +95,11 @@ void Player::input (unsigned long button, bool state)
     had_input_this_frame = true;
 }
 
+void Player::change_state (std::string name)
+{
+    if (states.find (name) != states.end ()) state = states[name];
+}
+
 void Player::hit (Move * move)
 {
     // cannot block a grab
@@ -346,7 +351,7 @@ bool Player::hit_check ()
 void Player::update_neutral ()
 {
     // crouching
-    if (is_pressed (DOWN))  
+    if (is_pressed (DOWN))
     {
         state   = states["neutral_to_crouch"];
         counter = 0;
@@ -452,7 +457,7 @@ void Player::update_walk_forward ()
     // everything you can do while walking can be done in neutral
     update_neutral ();
 
-    if (is_pressed (is_left () ? RIGHT : LEFT)) { move(is_left () ? walk_forward_speed : -walk_forward_speed, 0); }
+    if (is_pressed (is_left () ? RIGHT : LEFT)) { move (is_left () ? walk_forward_speed : -walk_forward_speed, 0); }
     else
     {
         state = states["neutral"];
@@ -466,7 +471,7 @@ void Player::update_walk_backward ()
 
     if (is_pressed (is_left () ? LEFT : RIGHT))
     {
-        move( is_left () ? -walk_backward_speed : walk_backward_speed, 0);
+        move (is_left () ? -walk_backward_speed : walk_backward_speed, 0);
         guard = MID;
     }
     else

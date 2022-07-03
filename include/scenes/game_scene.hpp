@@ -1,11 +1,13 @@
 #pragma once
 
+#include "SDL.h"
+#include "SDL_net.h"
 #include "animations/animation.hpp"
 #include "players/john_debug.hpp"
 #include "players/player.hpp"
 #include "scene.hpp"
+#include "networking/match_packet.hpp"
 
-#include <SDL.h>
 #include <iostream>
 
 class Stage
@@ -14,10 +16,10 @@ class Stage
     SDL_Texture * texture;
     std::string   texture_path;
 
-    SDL_Rect viewport;          /// rect in world space that represents the screen
-    SDL_Rect src_rect;    /// the area of the texture to use
-    SDL_Rect dst_rect;    /// the rect that viewport maps to in camera space
-    float    viewport_sf;       /// how much bigger / smaller the view is compared to 1080p
+    SDL_Rect viewport;       /// rect in world space that represents the screen
+    SDL_Rect src_rect;       /// the area of the texture to use
+    SDL_Rect dst_rect;       /// the rect that viewport maps to in camera space
+    float    viewport_sf;    /// how much bigger / smaller the view is compared to 1080p
 
     int left_wall;
     int right_wall;
@@ -48,6 +50,14 @@ class GameScene : public Scene
     std::vector<Player *> players;
 
     Stage stage;
+
+    UDPsocket   sd;
+    IPaddress   srvadd;
+    UDPpacket * p_out;
+    UDPpacket * p_in;
+
+    int current_player = 0;
+    Uint8 frame_time     = 0;
 
   public:
     GameScene (int width, int height);
