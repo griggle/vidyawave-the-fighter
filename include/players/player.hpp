@@ -48,15 +48,6 @@ class Player
 
     int i_frames = 0;    // frames until player starts to take damage again
 
-    enum Guard
-    {
-        NONE,
-        AIR,
-        MID,
-        LOW,
-    } guard
-        = NONE;    // if we will block next hit
-
     // SDL_Rect      src_area;          // area on texture to blit from
     SDL_Rect      dst_area = {};      // area on texture to blit from
     SDL_Texture * texture  = NULL;    // texture atlas of all textures
@@ -78,16 +69,26 @@ class Player
 
     int counter = 0;    // counter for transitions and moves
 
+    enum GuardType
+    {
+        NONE,
+        HIGH,
+        MID,
+        LOW,
+    } guard
+        = NONE;
+
   protected:
     std::string player_name;
 
     InputQueue<128> input_history;    // last 128 inputs
+    unsigned long   current_input        = 0;
     bool            had_input_this_frame = false;
 
     float v_x      = 0;      // velocity in x
     float v_y      = 0;      // velocity in y
     float gravity  = 4.5;    // acceleration under gravity in px/s^2
-    float friction = 0.8;    // number between 0 and 1 - 1 being max
+    float friction = 0.3;    // number between 0 and 1 - 1 being max
 
     int texture_height = 600;    // height of each texture in atlas
     int texture_width  = 500;    // width of each texture in atlas
@@ -139,6 +140,7 @@ class Player
     void update_neutral_to_crouch ();
     void update_crouch_to_neutral ();
 
+    void update_air_to_neutral ();
     void update_neutral_to_air ();
     void update_neutral_to_forward_air ();
     void update_neutral_to_backward_air ();

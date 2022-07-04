@@ -27,8 +27,8 @@ class State
 
   public:
     State (std::string player_name, std::string state_name, std::function<void ()> update_function, int fps = 60);
-    State (std::string player_name, std::string state_name, std::function<void ()> update_function, StateType state_type,
-           int fps = 60);
+    State (std::string player_name, std::string state_name, std::function<void ()> update_function,
+           StateType state_type, int fps = 60);
 
     void load_texture (SDL_Renderer * renderer);
     void close ();

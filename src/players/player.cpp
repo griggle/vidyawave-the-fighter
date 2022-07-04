@@ -12,6 +12,7 @@ Player::Player (std::string player_name) : player_name (player_name)
     states["neutral_to_crouch"] = new State (player_name, "neutral_to_crouch", std::bind (&Player::update_neutral_to_crouch, this));
     states["crouch_to_neutral"] = new State (player_name, "crouch_to_neutral", std::bind (&Player::update_crouch_to_neutral, this));
 
+    states["air_to_neutral"] = new State (player_name, "air_to_neutral", std::bind (&Player::update_air_to_neutral, this));
     states["neutral_to_air"] = new State (player_name, "neutral_to_air", std::bind (&Player::update_neutral_to_air, this));
     states["neutral_to_forward_air"] = new State (player_name, "neutral_to_forward_air", std::bind (&Player::update_neutral_to_forward_air, this));
     states["neutral_to_backward_air"] = new State (player_name, "neutral_to_backward_air", std::bind (&Player::update_neutral_to_backward_air, this));
@@ -53,6 +54,7 @@ void Player::update ()
     // update frame counters
     counter++;
     i_frames = std::max (0, i_frames - 1);
+    guard    = NONE;
 
     // if no change in inputs, duplicate last input
     if (!had_input_this_frame) input_history.push (input_history.at (0));
@@ -86,11 +88,17 @@ void Player::input (unsigned long button, bool state)
 {
     if (state == PRESSED)
     {
-        if ((input_history.at (0) | button) != (input_history.at (0)))
-            input_history.push (input_history.at (0) | button);
+        if ((current_input | button) != (current_input))
+        {
+            input_history.push (current_input | button);
+            current_input = input_history.at (0);
+        }
     }
     else
-        input_history.push (input_history.at (0) & (~button));
+    {
+        input_history.push (current_input & (~button));
+        current_input = input_history.at (0);
+    }
 
     had_input_this_frame = true;
 }
@@ -123,14 +131,14 @@ void Player::hit (Move * move)
     if (!move->is_grab)
     {
         // if blocked
-        if (guard == AIR && move->move_area == Move::AIR)
+        if (guard == HIGH && move->move_area == Move::HIGH)
         {
             state   = states["block_air"];
             counter = 0;
 
             return;
         }
-        else if (guard == MID && (move->move_area == Move::MID || move->move_area == Move::AIR))
+        else if (guard == MID && (move->move_area == Move::MID || move->move_area == Move::HIGH))
         {
             state   = states["block_neutral"];
             counter = 0;
@@ -178,7 +186,11 @@ void Player::update_state ()
     // update this state
     state->update_function ();
 
-    // std::cout << state->name << "                \r";
+    //if (!is_left ())
+    //{
+    //    std::cout << std::bitset<32> (current_input) << ", ";
+    //    std::cout << state->name << "                \n";
+    //}
 }
 
 void Player::update_physics ()
@@ -287,7 +299,7 @@ void Player::update_hitboxes ()
     }
 }
 
-bool Player::is_pressed (unsigned long button) { return is_pressed (button, input_history.at (0)); }
+bool Player::is_pressed (unsigned long button) { return is_pressed (button, current_input); }
 
 bool Player::is_pressed (unsigned long button, unsigned long state)
 {
@@ -309,17 +321,34 @@ bool Player::is_left ()
 {
     if (state->name != "grabbed" && state->state_type != State::MOVE_GRAB
         && state->state_type != State::MOVE_COMMAND_GRAB)
-        is_left_cache = x < other_player->x;
+    {
+        float nudge = 0;    // value to offset when both players have same x
+
+        if (x < left_wall + 100)    // if against left wall
+        {
+            nudge = 10;
+            nudge *= y > other_player->y ? -1 : 1;    // apply nudge to other player if we are above
+        }
+        else if (x > right_wall - 100)    // if against right wall
+        {
+            nudge = -50;
+            nudge *= y > other_player->y ? -1 : 1;    // apply nudge to other player if we are above
+        }
+
+        is_left_cache = (x + nudge) < other_player->x;
+    }
+
+    std::cout << "(" << x << "," << y << ") : "
+              << "(" << other_player->x << "," << other_player->y << ")\n";
+
     return is_left_cache;
 }
 
 void Player::move (float dx, float dy)
 {
-    if (std::fabs (x + dx - other_player->x) < max_separation)
-    {
-        x += dx;
-        y += dy;
-    }
+    if (std::fabs (x + dx - other_player->x) < max_separation) { x += dx; }
+
+    y += dy;
 }
 
 bool Player::find_input_string (std::vector<unsigned long> pattern, int fuzziness)
@@ -413,16 +442,21 @@ void Player::update_crouch ()
 
 void Player::update_air ()
 {
-    if (y >= ground) state = states["neutral"];
+    if (y >= ground)
+    {
+        state   = states["air_to_neutral"];
+        counter = 0;
+    }
 
     if (is_pressed (is_left () ? LEFT : RIGHT))
-        guard = AIR;
+        guard = HIGH;
     else
         guard = NONE;
 }
 
 void Player::update_neutral_to_crouch ()
 {
+    guard = MID;
     if (counter >= state->size ())
     {
         state   = states["crouch"];
@@ -431,6 +465,16 @@ void Player::update_neutral_to_crouch ()
 }
 
 void Player::update_crouch_to_neutral ()
+{
+    guard = MID;
+    if (counter >= state->size ())
+    {
+        state   = states["neutral"];
+        counter = 0;
+    }
+}
+
+void Player::update_air_to_neutral ()
 {
     if (counter >= state->size ())
     {

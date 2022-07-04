@@ -21,8 +21,8 @@ class Move : public State
 
     enum MoveArea
     {
+        HIGH,
         MID,
-        AIR,
         LOW,
     } move_area;
 

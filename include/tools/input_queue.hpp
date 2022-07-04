@@ -62,7 +62,7 @@ inline void InputQueue<T>::push (unsigned long value)
 template <int T>
 inline void InputQueue<T>::clear ()
 {
-    for (int i = 1; i < data.size (); i++) data.at ((current_front_index + i) % data.size ()) = 0;
+    for (int i = 0; i < data.size (); i++) data.at ((current_front_index + i) % data.size ()) = 0;
 
     //data.at ((current_front_index) % data.size ()) &= 0b1111;
 }
