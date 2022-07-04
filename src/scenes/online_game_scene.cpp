@@ -105,17 +105,17 @@ bool OnlineGameScene::step_event (SDL_Event & e)
             switch (e.key.keysym.sym)
             {
                 case SDLK_w:
-                case SDLK_UP: players.at(current_player)->input (UP, RELEASED); break;
+                case SDLK_UP: players.at (current_player)->input (UP, RELEASED); break;
                 case SDLK_s:
-                case SDLK_DOWN: players.at(current_player)->input (DOWN, RELEASED); break;
+                case SDLK_DOWN: players.at (current_player)->input (DOWN, RELEASED); break;
                 case SDLK_a:
-                case SDLK_LEFT: players.at(current_player)->input (LEFT, RELEASED); break;
+                case SDLK_LEFT: players.at (current_player)->input (LEFT, RELEASED); break;
                 case SDLK_d:
-                case SDLK_RIGHT: players.at(current_player)->input (RIGHT, RELEASED); break;
-                case SDLK_j: players.at(current_player)->input (A, RELEASED); break;
-                case SDLK_k: players.at(current_player)->input (B, RELEASED); break;
-                case SDLK_l: players.at(current_player)->input (C, RELEASED); break;
-                case SDLK_SEMICOLON: players.at(current_player)->input (D, RELEASED); break;
+                case SDLK_RIGHT: players.at (current_player)->input (RIGHT, RELEASED); break;
+                case SDLK_j: players.at (current_player)->input (A, RELEASED); break;
+                case SDLK_k: players.at (current_player)->input (B, RELEASED); break;
+                case SDLK_l: players.at (current_player)->input (C, RELEASED); break;
+                case SDLK_SEMICOLON: players.at (current_player)->input (D, RELEASED); break;
             }
             break;
         case SDL_JOYBUTTONDOWN:
@@ -124,22 +124,22 @@ bool OnlineGameScene::step_event (SDL_Event & e)
                 // std::cout << (int) e.jbutton.button << "\n";
                 switch ((int) e.jbutton.button)
                 {
-                    case 0: players.at(current_player)->input (A, PRESSED); break;    // x
-                    case 1: players.at(current_player)->input (B, PRESSED); break;    // circle
-                    case 2: players.at(current_player)->input (C, PRESSED); break;    // square
-                    case 3: players.at(current_player)->input (D, PRESSED); break;    // triangle
-                    case 4:                                               // select
-                    case 5:                                               // logo
-                    case 6:                                               // start
-                    case 7:                                               // l stick
-                    case 8:                                               // r stick
-                    case 9:                                               // l bumper
-                    case 10: break;                                       // r bumper
+                    case 0: players.at (current_player)->input (A, PRESSED); break;    // x
+                    case 1: players.at (current_player)->input (B, PRESSED); break;    // circle
+                    case 2: players.at (current_player)->input (C, PRESSED); break;    // square
+                    case 3: players.at (current_player)->input (D, PRESSED); break;    // triangle
+                    case 4:                                                            // select
+                    case 5:                                                            // logo
+                    case 6:                                                            // start
+                    case 7:                                                            // l stick
+                    case 8:                                                            // r stick
+                    case 9:                                                            // l bumper
+                    case 10: break;                                                    // r bumper
 
-                    case 11: players.at(current_player)->input (UP, PRESSED); break;       // up
-                    case 12: players.at(current_player)->input (DOWN, PRESSED); break;     // down
-                    case 13: players.at(current_player)->input (LEFT, PRESSED); break;     // left
-                    case 14: players.at(current_player)->input (RIGHT, PRESSED); break;    // right
+                    case 11: players.at (current_player)->input (UP, PRESSED); break;       // up
+                    case 12: players.at (current_player)->input (DOWN, PRESSED); break;     // down
+                    case 13: players.at (current_player)->input (LEFT, PRESSED); break;     // left
+                    case 14: players.at (current_player)->input (RIGHT, PRESSED); break;    // right
                 }
             }
             break;
@@ -149,22 +149,22 @@ bool OnlineGameScene::step_event (SDL_Event & e)
                 // std::cout << (int) e.jbutton.button << "\n";
                 switch ((int) e.jbutton.button)
                 {
-                    case 0: players.at(current_player)->input (A, RELEASED); break;    // x
-                    case 1: players.at(current_player)->input (B, RELEASED); break;    // circle
-                    case 2: players.at(current_player)->input (C, RELEASED); break;    // square
-                    case 3: players.at(current_player)->input (D, RELEASED); break;    // triangle
-                    case 4:                                                // select
-                    case 5:                                                // logo
-                    case 6:                                                // start
-                    case 7:                                                // l stick
-                    case 8:                                                // r stick
-                    case 9:                                                // l bumper
-                    case 10: break;                                        // r bumper
+                    case 0: players.at (current_player)->input (A, RELEASED); break;    // x
+                    case 1: players.at (current_player)->input (B, RELEASED); break;    // circle
+                    case 2: players.at (current_player)->input (C, RELEASED); break;    // square
+                    case 3: players.at (current_player)->input (D, RELEASED); break;    // triangle
+                    case 4:                                                             // select
+                    case 5:                                                             // logo
+                    case 6:                                                             // start
+                    case 7:                                                             // l stick
+                    case 8:                                                             // r stick
+                    case 9:                                                             // l bumper
+                    case 10: break;                                                     // r bumper
 
-                    case 11: players.at(current_player)->input (UP, RELEASED); break;       // up
-                    case 12: players.at(current_player)->input (DOWN, RELEASED); break;     // down
-                    case 13: players.at(current_player)->input (LEFT, RELEASED); break;     // left
-                    case 14: players.at(current_player)->input (RIGHT, RELEASED); break;    // right
+                    case 11: players.at (current_player)->input (UP, RELEASED); break;       // up
+                    case 12: players.at (current_player)->input (DOWN, RELEASED); break;     // down
+                    case 13: players.at (current_player)->input (LEFT, RELEASED); break;     // left
+                    case 14: players.at (current_player)->input (RIGHT, RELEASED); break;    // right
                 }
             }
             break;
@@ -289,6 +289,10 @@ void OnlineGameScene::step_scene ()
         players[current_player == 0 ? 1 : 0]->change_state (((MatchPacket *) p_in->data)->state);
         players[current_player == 0 ? 1 : 0]->counter = ((MatchPacket *) p_in->data)->counter;
     }
+
+    if (players[current_player]->state->state_type == State::MOVE_GRAB
+        || players[current_player]->state->state_type == State::MOVE_COMMAND_GRAB)
+        players[current_player == 0 ? 1 : 0]->change_state ("grabbed");
 }
 
 void OnlineGameScene::close ()
@@ -298,7 +302,7 @@ void OnlineGameScene::close ()
     SDLNet_FreePacket (p_in);
     SDLNet_FreePacket (p_out);
 
-    
+
     SDL_DestroyTexture (connecting_screen);
     connecting_screen = NULL;
 }

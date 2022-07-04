@@ -22,8 +22,10 @@ bool GameScene::init (SDL_Renderer * renderer)
     players.at (0)->other_player = players.at (1);
     players.at (1)->other_player = players.at (0);
 
-    players.at (0)->x = ((stage.right_wall - stage.left_wall) / 2) - 300;
-    players.at (1)->x = ((stage.right_wall - stage.left_wall) / 2) + 300;
+    //players.at (0)->x = ((stage.right_wall - stage.left_wall) / 2) - 300;
+    //players.at (1)->x = ((stage.right_wall - stage.left_wall) / 2) + 300;
+    players.at (0)->x = ((stage.right_wall - stage.left_wall)  - 300);
+    players.at (1)->x = ((stage.right_wall - stage.left_wall) - 100);
 
     for (auto & player : players)
     {
