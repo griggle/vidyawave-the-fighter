@@ -22,10 +22,8 @@ bool GameScene::init (SDL_Renderer * renderer)
     players.at (0)->other_player = players.at (1);
     players.at (1)->other_player = players.at (0);
 
-    //players.at (0)->x = ((stage.right_wall - stage.left_wall) / 2) - 300;
-    //players.at (1)->x = ((stage.right_wall - stage.left_wall) / 2) + 300;
-    players.at (0)->x = ((stage.right_wall - stage.left_wall)  - 300);
-    players.at (1)->x = ((stage.right_wall - stage.left_wall) - 100);
+    players.at (0)->x = ((stage.right_wall - stage.left_wall) / 2) - 300;
+    players.at (1)->x = ((stage.right_wall - stage.left_wall) / 2) + 300;
 
     for (auto & player : players)
     {
@@ -33,7 +31,7 @@ bool GameScene::init (SDL_Renderer * renderer)
         player->y              = stage.ground_y;
         player->left_wall      = stage.left_wall;
         player->right_wall     = stage.right_wall;
-        player->max_separation = stage.tex_height;
+        player->max_separation = 1530;
 
         player->load_states (renderer);
     }

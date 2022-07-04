@@ -47,7 +47,7 @@ def generate_animation_atlas_and_hitbox(frames_dir, atlas_path, hitbox_path, hur
             return
 
         with open(atlas_path, "a") as f:
-            f.write("res/characters/" + frame_path[2:] + "\n")
+            f.write("./res/characters/" + frame_path[2:] + "\n")
 
         hiurtboxes = [[], []]
 

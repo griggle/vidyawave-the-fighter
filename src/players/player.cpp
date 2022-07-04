@@ -338,9 +338,6 @@ bool Player::is_left ()
         is_left_cache = (x + nudge) < other_player->x;
     }
 
-    std::cout << "(" << x << "," << y << ") : "
-              << "(" << other_player->x << "," << other_player->y << ")\n";
-
     return is_left_cache;
 }
 

@@ -17,19 +17,25 @@ if (WIN32)
     set(SDL2_image_DIR deps/SDL2_image-vc)
     set(SDL2_net_DIR deps/SDL2_net-vc)
     set(SDL2_mixer_DIR deps/SDL2_mixer-vc)
+else()
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/deps/cmake_modules")
 endif (WIN32)
 
 find_package(SDL2 REQUIRED)
+message(SDL2_INCLUDE_DIRS="${SDL2_INCLUDE_DIRS}")
 include_directories(${SDL2_INCLUDE_DIRS})
 
 find_package(SDL2_image REQUIRED)
-include_directories(${SDL2_image_INCLUDE_DIRS})
+message(SDL2_IMAGE_INCLUDE_DIRS="${SDL2_IMAGE_INCLUDE_DIRS}")
+include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
 
 find_package(SDL2_net REQUIRED)
-include_directories(${SDL2_net_INCLUDE_DIRS})
+message(SDL2_NET_INCLUDE_DIRS="${SDL2_NET_INCLUDE_DIRS}")
+include_directories(${SDL2_NET_INCLUDE_DIRS})
 
 find_package(SDL2_mixer REQUIRED)
-include_directories(${SDL2_mixer_INCLUDE_DIRS})
+message(SDL2_MIXER_INCLUDE_DIRS="${SDL2_MIXER_INCLUDE_DIRS}")
+include_directories(${SDL2_MIXER_INCLUDE_DIRS})
 
 #######################################################################################################################
 #                                                       CLIENT                                                        #
@@ -47,10 +53,15 @@ add_executable(Vidyawave_The_Fighter "")
 add_subdirectory(src)
 target_include_directories(Vidyawave_The_Fighter PRIVATE include)
 
+message(SDL2_LIBRARIES="${SDL2_LIBRARIES}")
+#set(SDL2_LIBRARIES /usr/lib/x86_64-linux-gnu/libSDL2main.a/usr/lib/x86_64-linux-gnu/libSDL2.so-lpthread)
 target_link_libraries(Vidyawave_The_Fighter ${SDL2_LIBRARIES})
-target_link_libraries(Vidyawave_The_Fighter ${SDL2_image_LIBRARIES})
-target_link_libraries(Vidyawave_The_Fighter ${SDL2_net_LIBRARIES})
-target_link_libraries(Vidyawave_The_Fighter ${SDL2_mixer_LIBRARIES})
+message(SDL2_IMAGE_LIBRARIES="${SDL2_IMAGE_LIBRARIES}")
+target_link_libraries(Vidyawave_The_Fighter ${SDL2_IMAGE_LIBRARIES})
+message(SDL2_NET_LIBRARIES="${SDL2_NET_LIBRARIES}")
+target_link_libraries(Vidyawave_The_Fighter ${SDL2_NET_LIBRARIES})
+message(SDL2_MIXER_LIBRARIES="${SDL2_MIXER_LIBRARIES}")
+target_link_libraries(Vidyawave_The_Fighter ${SDL2_MIXER_LIBRARIES})
 
 
 if (WIN32)
@@ -139,7 +150,7 @@ add_executable(VtF_Server "src/networking/server_main.cpp")
 target_include_directories(VtF_Server PRIVATE include)
 
 target_link_libraries(VtF_Server ${SDL2_LIBRARIES})
-target_link_libraries(VtF_Server ${SDL2_net_LIBRARIES})
+target_link_libraries(VtF_Server ${SDL2_NET_LIBRARIES})
 
 
 if (WIN32)

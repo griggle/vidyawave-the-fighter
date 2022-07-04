@@ -19,7 +19,7 @@ void PlayerJohnDebug::update_moves ()
     // movement
     if (state->state_type == State::STATE)
     {
-        if (find_input_string ({is_left () ? RIGHT : LEFT, 0, is_left () ? RIGHT : LEFT}))
+        if (find_input_string ({is_left () ? RIGHT : LEFT, 0, is_left () ? RIGHT : LEFT})) 
         {
             state   = states["sprint"];
             counter = 0;

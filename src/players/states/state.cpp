@@ -5,9 +5,9 @@ State::State (std::string player_name, std::string state_name, std::function<voi
               int fps)
     : update_function (update_function), state_type (state_type)
 {
-    animation = new HitAnimation ("res/characters/" + player_name + "/animations/" + state_name + ".atlas",
-                                  "res/characters/" + player_name + "/animations/" + state_name + ".hurtboxes",
-                                  "res/characters/" + player_name + "/animations/" + state_name + ".hitboxes", fps);
+    animation = new HitAnimation ("./res/characters/" + player_name + "/animations/" + state_name + ".atlas",
+                                  "./res/characters/" + player_name + "/animations/" + state_name + ".hurtboxes",
+                                  "./res/characters/" + player_name + "/animations/" + state_name + ".hitboxes", fps);
 
     name = state_name;
 }

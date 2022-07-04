@@ -7,6 +7,7 @@ res/**/files
 deps/*
 !deps/fetch_windows_deps.bat
 !cmake_configs
+!cmake_modules
 
 # generated docs
 docs/html

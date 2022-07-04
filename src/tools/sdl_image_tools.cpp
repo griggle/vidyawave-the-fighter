@@ -12,7 +12,7 @@ SDL_Texture * IMG_LoadTexture (SDL_Renderer * renderer, const char * file)
     }
     else
     {
-        std::cerr << "unable to create surface from file: " << file << ", error:" << SDL_GetError () << file << "\n";
+        std::cerr << "unable to create surface from file: " << file << ", error:" << SDL_GetError () << file << "\n\n\n";
     }
     return texture;
 }

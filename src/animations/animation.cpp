@@ -12,6 +12,7 @@ void Animation::load_texture (SDL_Renderer * renderer)
         {
             std::string temp;
             std::getline (atlas_stream, temp);
+            temp = std::regex_replace(temp, std::regex("\r+"), "");
 
             if (temp.size () > 5) textures.push_back (IMG_LoadTexture (renderer, temp.c_str ()));
         }
