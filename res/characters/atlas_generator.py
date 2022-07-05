@@ -31,7 +31,7 @@ def generate_animation_atlas_and_hitbox(frames_dir, atlas_path, hitbox_path, hur
     if len(frames) == 0:
         print(pathlib.Path(frames_dir).name,
               "not found, using missing texture")
-        frames = ["missing_texture.png"]
+        frames = ["./missing_texture.png"]
 
     hitboxes = []
     hurtboxes = []

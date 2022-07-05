@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene.hpp"
+#include "character_select_scene.hpp"
 #include "canvas.hpp"
 #include "SDL.h"
 #include "tools/sdl_image_tools.hpp"

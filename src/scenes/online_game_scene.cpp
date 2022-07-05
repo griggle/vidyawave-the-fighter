@@ -1,6 +1,6 @@
 #include "scenes/online_game_scene.hpp"
 
-OnlineGameScene::OnlineGameScene (SceneContainer * canvas) : GameScene (canvas) {}
+OnlineGameScene::OnlineGameScene (SceneContainer * canvas, Player * p1, Player * p2) : GameScene (canvas, p1, p2) {}
 
 bool OnlineGameScene::init (SDL_Renderer * renderer)
 {
@@ -10,7 +10,7 @@ bool OnlineGameScene::init (SDL_Renderer * renderer)
     success = GameScene::init (renderer);
 
     // change to connecting screen
-    connecting_screen = IMG_LoadTexture (renderer, "res/ui/connecting_screen.png");
+    connecting_screen = IMG_LoadTexture (renderer, "res/ui/game/connecting_screen.png");
     SDL_RenderCopy (renderer, connecting_screen, NULL, NULL);
     SDL_RenderPresent (renderer);
 

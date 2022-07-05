@@ -55,6 +55,8 @@ class Player
     std::vector<SDL_Rect> hitboxes;
     std::vector<SDL_Rect> hurtboxes;
 
+    SDL_Texture * avatar = NULL;
+
     SDL_Rect collision;    // area to collide with other players / wall with
 
     Player * other_player = NULL;

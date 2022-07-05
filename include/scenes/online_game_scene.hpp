@@ -13,7 +13,7 @@ class OnlineGameScene : public GameScene
     SDL_Texture * connecting_screen = NULL;
 
   public:
-    OnlineGameScene (SceneContainer * canvas);
+    OnlineGameScene (SceneContainer * canvas, Player * p1, Player * p2);
 
     bool init (SDL_Renderer * renderer);
     bool step_event (SDL_Event & e);    // run a frame

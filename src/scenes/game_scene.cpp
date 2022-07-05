@@ -1,6 +1,10 @@
 #include "scenes/game_scene.hpp"
 
-GameScene::GameScene (SceneContainer * canvas) : Scene (canvas) {}
+GameScene::GameScene (SceneContainer * canvas, Player * p1, Player * p2) : Scene (canvas)
+{
+    players.push_back (p1);
+    players.push_back (p2);
+}
 
 bool GameScene::init (SDL_Renderer * renderer)
 {
@@ -8,7 +12,7 @@ bool GameScene::init (SDL_Renderer * renderer)
     bool success = true;
 
     // change to loading screen
-    loading_screen = IMG_LoadTexture (renderer, "res/ui/loading_screen.png");
+    loading_screen = IMG_LoadTexture (renderer, "res/ui/game/loading_screen.png");
     SDL_RenderCopy (renderer, loading_screen, NULL, NULL);
     SDL_RenderPresent (renderer);
 
@@ -16,9 +20,6 @@ bool GameScene::init (SDL_Renderer * renderer)
     stage.load (renderer);
 
     // load players
-    players.push_back (new PlayerJohnDebug ());
-    players.push_back (new PlayerJohnDebug ());
-
     players.at (0)->other_player = players.at (1);
     players.at (1)->other_player = players.at (0);
 

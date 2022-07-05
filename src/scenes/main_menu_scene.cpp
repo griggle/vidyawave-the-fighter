@@ -36,9 +36,10 @@ bool MainMenuScene::step_event (SDL_Event & e)
 
                 case SDLK_j:
                     if (selected == 0)
-                        static_cast<Canvas *>(canvas)->set_scene (new GameScene (canvas));
+                        static_cast<Canvas *>(canvas)->set_scene (new CharacterSelectScene (canvas));
                     else if (selected == 1)
-                        static_cast<Canvas *> (canvas)->set_scene (new OnlineGameScene (canvas));
+                        static_cast<Canvas *> (canvas)->set_scene (
+                            new OnlineGameScene (canvas, new PlayerJohnDebug (), new PlayerJohnDebug ()));
                     break;
             }
             break;
@@ -50,9 +51,10 @@ bool MainMenuScene::step_event (SDL_Event & e)
                 {
                     case 0:
                         if (selected == 0)
-                            static_cast<Canvas *> (canvas)->set_scene (new GameScene (canvas));
+                            static_cast<Canvas *> (canvas)->set_scene (new CharacterSelectScene (canvas));
                         else if (selected == 1)
-                            static_cast<Canvas *> (canvas)->set_scene (new OnlineGameScene (canvas));
+                            static_cast<Canvas *> (canvas)->set_scene (
+                                new OnlineGameScene (canvas, new PlayerJohnDebug (), new PlayerJohnDebug ()));
                         break;         // x
                     case 1:            // circle
                     case 2:            // square

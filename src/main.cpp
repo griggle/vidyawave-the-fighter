@@ -40,7 +40,7 @@ int main (int argc, char * args[])
         if (SDL_GetTicks () - fps_start > 1000) [[unlikely]]
             {
                 std::cout << "fps: " << frame_counter << "\r";
-                frame_counter = 0;
+                frame_counter = 0; 
                 fps_start     = SDL_GetTicks ();
             }
     }

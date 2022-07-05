@@ -35,6 +35,8 @@ void Player::load_states (SDL_Renderer * renderer)
     for (auto & state : states) state.second->load_texture (renderer);
 
     state = states["neutral"];
+
+    avatar = IMG_LoadTexture (renderer, std::string ("./res/characters/" + player_name + "/avatar.png").c_str ());
 }
 
 void Player::close ()
@@ -47,6 +49,9 @@ void Player::close ()
     }
 
     texture = NULL;
+
+    SDL_DestroyTexture (avatar);
+    avatar = NULL;
 }
 
 void Player::update ()
@@ -186,7 +191,7 @@ void Player::update_state ()
     // update this state
     state->update_function ();
 
-    //if (!is_left ())
+    // if (!is_left ())
     //{
     //    std::cout << std::bitset<32> (current_input) << ", ";
     //    std::cout << state->name << "                \n";

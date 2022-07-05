@@ -8,4 +8,5 @@ target_sources(Vidyawave_The_Fighter
         ${CMAKE_CURRENT_LIST_DIR}/online_game_scene.cpp
         ${CMAKE_CURRENT_LIST_DIR}/main_menu_scene.cpp      
         ${CMAKE_CURRENT_LIST_DIR}/canvas.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/character_select_scene.cpp
 )

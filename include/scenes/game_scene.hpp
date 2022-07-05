@@ -4,6 +4,7 @@
 #include "SDL_net.h"
 #include "animations/animation.hpp"
 #include "players/john_debug.hpp"
+#include "players/billy.hpp"
 #include "players/player.hpp"
 #include "scene.hpp"
 #include "networking/match_packet.hpp"
@@ -57,7 +58,7 @@ class GameScene : public Scene
     SDL_Texture * loading_screen = NULL;
 
   public:
-    GameScene (SceneContainer * canvas);
+    GameScene (SceneContainer * canvas, Player * p1, Player * p2);
 
     bool init (SDL_Renderer *);         // init canvas and memory
     bool step_event (SDL_Event & e);    // run a frame
