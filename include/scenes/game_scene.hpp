@@ -57,7 +57,7 @@ class GameScene : public Scene
     SDL_Texture * loading_screen = NULL;
 
   public:
-    GameScene ();
+    GameScene (SceneContainer * canvas);
 
     bool init (SDL_Renderer *);         // init canvas and memory
     bool step_event (SDL_Event & e);    // run a frame

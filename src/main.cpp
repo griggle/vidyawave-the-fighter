@@ -1,5 +1,5 @@
 #include "SDL_net.h"
-#include "canvas.hpp"
+#include "scenes/canvas.hpp"
 
 #include <chrono>
 #include <iostream>
@@ -17,7 +17,7 @@ int main (int argc, char * args[])
     Canvas canvas (width, height);
 
     canvas.init ();
-    canvas.set_scene (new GameScene ());
+    canvas.set_scene (new MainMenuScene (&canvas));
 
     int   start      = SDL_GetTicks ();
     int   fps_start  = SDL_GetTicks ();

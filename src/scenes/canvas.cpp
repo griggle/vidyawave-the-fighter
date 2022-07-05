@@ -1,6 +1,8 @@
-#include <canvas.hpp>
+#include <scenes/canvas.hpp>
 
-Canvas::Canvas (int width, int height) : width (width), height (height), quit (false), current_scene (nullptr) {}
+Canvas::Canvas (int width, int height) : SceneContainer(width, height), current_scene (nullptr)
+{
+}
 
 bool Canvas::step ()
 {

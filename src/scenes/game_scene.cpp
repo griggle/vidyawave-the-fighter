@@ -1,6 +1,6 @@
 #include "scenes/game_scene.hpp"
 
-GameScene::GameScene () : Scene () {}
+GameScene::GameScene (SceneContainer * canvas) : Scene (canvas) {}
 
 bool GameScene::init (SDL_Renderer * renderer)
 {

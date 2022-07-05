@@ -1,6 +1,6 @@
 #include "scenes/online_game_scene.hpp"
 
-OnlineGameScene::OnlineGameScene () : GameScene () {}
+OnlineGameScene::OnlineGameScene (SceneContainer * canvas) : GameScene (canvas) {}
 
 bool OnlineGameScene::init (SDL_Renderer * renderer)
 {

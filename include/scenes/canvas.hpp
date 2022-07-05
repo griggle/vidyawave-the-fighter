@@ -5,23 +5,23 @@
 #include "SDL_mixer.h"
 #include "scenes/game_scene.hpp"
 #include "scenes/online_game_scene.hpp"
+#include "scenes/main_menu_scene.hpp"
 #include "scenes/scene.hpp"
+#include "scenes/scene_container.hpp"
 
 #include <cmath>
 #include <stdio.h>
 #include <string>
 #include <vector>
 
-class Canvas
+class Canvas : public SceneContainer
 {
   protected:
     SDL_Window *   gWindow   = NULL;    // The window we'll be rendering to
     SDL_Renderer * gRenderer = NULL;    // The window renderer
-    int            width, height;
 
     SDL_Joystick * gGameController = NULL;    // Game Controller 1 handler
 
-    bool      quit;    // Main loop flag
     SDL_Event e;       // Event handler
 
     Scene * current_scene;    // The current scene
