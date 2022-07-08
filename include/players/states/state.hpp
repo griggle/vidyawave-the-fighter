@@ -1,6 +1,7 @@
 #pragma once
 
 #include "animations/h_animation.hpp"
+#include "players/generated/generated_states.hpp"
 
 #include <functional>
 

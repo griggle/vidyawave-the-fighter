@@ -51,6 +51,10 @@ add_executable(Vidyawave_The_Fighter "")
 #endif(CMAKE_BUILD_TYPE EQUAL "Release")
 
 add_subdirectory(src)
+target_sources(Vidyawave_The_Fighter 
+    PRIVATE 
+        ${CMAKE_CURRENT_LIST_DIR}/generated/generated_states.cpp
+)
 target_include_directories(Vidyawave_The_Fighter PRIVATE include)
 
 message(SDL2_LIBRARIES="${SDL2_LIBRARIES}")

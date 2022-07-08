@@ -1,7 +1,6 @@
 #pragma once
 
 #include "player.hpp"
-#include "billy/billy_states.hpp"
 
 class PlayerBilly : public Player
 {

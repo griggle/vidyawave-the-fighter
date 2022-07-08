@@ -1,13 +1,23 @@
 #include "players/states/state.hpp"
 
 State::State (std::string player_name, std::string state_name, std::function<void ()> update_function,
-              StateType state_type,
-              int fps)
+              StateType state_type, int fps)
     : update_function (update_function), state_type (state_type)
 {
-    animation = new HitAnimation ("./res/characters/" + player_name + "/animations/" + state_name + ".atlas",
-                                  "./res/characters/" + player_name + "/animations/" + state_name + ".hurtboxes",
-                                  "./res/characters/" + player_name + "/animations/" + state_name + ".hitboxes", fps);
+    std::vector<std::string>           atlas     = {"res/missing_texture.png"};
+    std::vector<std::vector<SDL_Rect>> hitboxes  = {};
+    std::vector<std::vector<SDL_Rect>> hurtboxes = {};
+
+    if (!GeneratedStates::atlas_map.contains (player_name) || !GeneratedStates::atlas_map.at (player_name).contains (state_name))
+        std::cerr << player_name << "::" << state_name << " not found in state atlas map.\n";
+
+    if (!GeneratedStates::hitbox_map.contains (player_name) || !GeneratedStates::hitbox_map.at (player_name).contains (state_name))
+        std::cerr << player_name << "::" << state_name << " not found in state hitbox map.\n";
+
+    if (!GeneratedStates::hurtbox_map.contains (player_name) || !GeneratedStates::hurtbox_map.at (player_name).contains (state_name))
+        std::cerr << player_name << "::" << state_name << " not found in state hurtbox map.\n";
+
+    animation = new HitAnimation (atlas, hitboxes, hurtboxes, fps);
 
     name = state_name;
 }

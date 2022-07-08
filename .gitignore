@@ -4,6 +4,9 @@ CMakeSettings.json
 res/**/files
 design
 
+# generated source
+generated
+
 # deps
 deps/*
 !deps/fetch_windows_deps.bat
