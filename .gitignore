@@ -2,6 +2,7 @@ CMakeSettings.json
 
 *.kra
 res/**/files
+design
 
 # deps
 deps/*

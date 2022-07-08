@@ -1,1 +1,0 @@
-python hitbox_generator.py

@@ -20,17 +20,17 @@ class Animation
 
     int fps = 60;
 
-    std::string atlas_path;
+    std::vector<std::string> atlas;
 
     std::vector<SDL_Texture *> textures;
 
   public:
-    Animation (std::string atlas_path = "res/characters/missing_texture.atlas", int fps = 60);
+    Animation (std::vector<std::string> atlas, int fps = 60);
 
     void load_texture (SDL_Renderer * renderer);
     void close_texture ();
 
-    inline int size () { return frames; };
+    inline int size () { return floor (textures.size () * (60.0 / fps)); };
 
     SDL_Texture * get_frame (int frame);
 };

@@ -9,13 +9,13 @@ Player::Player (std::string player_name) : player_name (player_name)
     states["crouch"] = new State (player_name, "crouch", std::bind (&Player::update_crouch, this), 6);
     states["air"] = new State (player_name, "air", std::bind (&Player::update_air, this), 6);
 
-    states["neutral_to_crouch"] = new State (player_name, "neutral_to_crouch", std::bind (&Player::update_neutral_to_crouch, this));
-    states["crouch_to_neutral"] = new State (player_name, "crouch_to_neutral", std::bind (&Player::update_crouch_to_neutral, this));
+    states["neutral_to_crouch"] = new State (player_name, "neutral_to_crouch", std::bind (&Player::update_neutral_to_crouch, this), 20);
+    states["crouch_to_neutral"] = new State (player_name, "crouch_to_neutral", std::bind (&Player::update_crouch_to_neutral, this), 20);
 
-    states["air_to_neutral"] = new State (player_name, "air_to_neutral", std::bind (&Player::update_air_to_neutral, this));
-    states["neutral_to_air"] = new State (player_name, "neutral_to_air", std::bind (&Player::update_neutral_to_air, this));
-    states["neutral_to_forward_air"] = new State (player_name, "neutral_to_forward_air", std::bind (&Player::update_neutral_to_forward_air, this));
-    states["neutral_to_backward_air"] = new State (player_name, "neutral_to_backward_air", std::bind (&Player::update_neutral_to_backward_air, this));
+    states["air_to_neutral"] = new State (player_name, "air_to_neutral", std::bind (&Player::update_air_to_neutral, this), 30);
+    states["neutral_to_air"] = new State (player_name, "neutral_to_air", std::bind (&Player::update_neutral_to_air, this), 30);
+    states["neutral_to_forward_air"] = new State (player_name, "neutral_to_forward_air", std::bind (&Player::update_neutral_to_forward_air, this), 30);
+    states["neutral_to_backward_air"] = new State (player_name, "neutral_to_backward_air", std::bind (&Player::update_neutral_to_backward_air, this), 30);
 
     states["walk_forward"] = new State (player_name, "walk_forward", std::bind (&Player::update_walk_forward, this), 6);
     states["walk_backward"] = new State (player_name, "walk_backward", std::bind (&Player::update_walk_backward, this), 6);
@@ -446,7 +446,7 @@ void Player::update_air ()
 {
     if (y >= ground)
     {
-        state   = states["air_to_neutral"];
+        state   = states["air_to_neutral"]; 
         counter = 0;
     }
 
@@ -464,6 +464,9 @@ void Player::update_neutral_to_crouch ()
         state   = states["crouch"];
         counter = 0;
     }
+
+    // neutral to crouch is the same as crouch
+    update_crouch ();
 }
 
 void Player::update_crouch_to_neutral ()
@@ -474,6 +477,9 @@ void Player::update_crouch_to_neutral ()
         state   = states["neutral"];
         counter = 0;
     }
+
+    // crouch to neutral is the same as neutral
+    update_neutral ();
 }
 
 void Player::update_air_to_neutral ()
