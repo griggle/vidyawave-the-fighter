@@ -137,14 +137,25 @@ endif ()
             ^& IF %ERRORLEVEL% LEQ 1 verify >nul
     )
 
-    add_custom_command(TARGET Vidyawave_The_Fighter PRE_BUILD 
-        COMMAND (python "${PROJECT_SOURCE_DIR}/scripts/atlas_generator.py")
-            ^& IF %ERRORLEVEL% LEQ 1 verify >nul
+    add_custom_command(TARGET Vidyawave_The_Fighter POST_BUILD 
+        COMMAND (del "generated\\*.cpp")
+                ^& IF %ERRORLEVEL% LEQ 1 verify >nul 
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 
-    add_custom_command(TARGET Vidyawave_The_Fighter PRE_BUILD 
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_atlas.cpp
+        COMMAND (python "${PROJECT_SOURCE_DIR}/scripts/atlas_generator.py")
+                ^& IF %ERRORLEVEL% LEQ 1 verify >nul 
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+    
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_hitboxes.cpp 
+               ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_hurtboxes.cpp
         COMMAND (python "${PROJECT_SOURCE_DIR}/scripts/hitbox_generator.py")
-            ^& IF %ERRORLEVEL% LEQ 1 verify >nul
+                ^& IF %ERRORLEVEL% LEQ 1 verify >nul 
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 
 else ()
@@ -155,12 +166,22 @@ else ()
             $<TARGET_FILE_DIR:Vidyawave_The_Fighter>
     )
 
-    add_custom_command(TARGET Vidyawave_The_Fighter PRE_BUILD 
-        COMMAND (python3 "${PROJECT_SOURCE_DIR}/scripts/atlas_generator.py")
+    add_custom_command(TARGET Vidyawave_The_Fighter POST_BUILD 
+        COMMAND (rm "${PROJECT_SOURCE_DIR}/generated/*")
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 
-    add_custom_command(TARGET Vidyawave_The_Fighter PRE_BUILD 
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_atlas.cpp
+        COMMAND (python3 "${PROJECT_SOURCE_DIR}/scripts/atlas_generator.py")
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+    
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_hitboxes.cpp 
+               ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_hurtboxes.cpp
         COMMAND (python3 "${PROJECT_SOURCE_DIR}/scripts/hitbox_generator.py")
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 
 endif(WIN32)

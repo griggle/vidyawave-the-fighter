@@ -174,11 +174,30 @@ def main():
 
     # #print(generated_file)
 
-    # if not os.path.exists('../generated'):
-    #     os.makedirs('../generated')
+    if not os.path.exists('generated'):
+        os.makedirs('generated')
 
-    # with open("../generated/generated_state_atlas.cpp", "w") as f:
-    #     f.write(generated_file)
+    with open("generated/generated_state_hitboxes.cpp", "w") as f:
+        f.write(
+            """#include "players/states/state.hpp"
+
+        namespace GeneratedStates
+        {
+            // indexed by [player_name][state_name]
+            std::map<std::string, std::map<std::string, std::vector<std::vector<SDL_Rect>>>> hitbox_map  = { };
+        }"""
+        )
+
+    with open("generated/generated_state_hurtboxes.cpp", "w") as f:
+        f.write(
+            """#include "players/states/state.hpp"
+
+            namespace GeneratedStates
+            {
+                // indexed by [player_name][state_name]
+                std::map<std::string, std::map<std::string, std::vector<std::vector<SDL_Rect>>>> hurtbox_map  = { };
+            }"""
+            )
    
 
 if __name__ == "__main__":

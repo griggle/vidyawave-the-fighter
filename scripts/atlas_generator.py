@@ -136,7 +136,7 @@ common_animations = [
 def generate_for_animation(character_name, animation_name):
     generated_animation_string = "{" + '"' + animation_name + '"' + ",\n                    { "
 
-    with os.scandir("../res/characters/" + character_name + "/animations/frames/" + animation_name) as frames:
+    with os.scandir("res/characters/" + character_name + "/animations/frames/" + animation_name) as frames:
         for entry in frames:
             if(entry.is_file() and entry.name.endswith(".png")):
                 generated_animation_string += '\n                    "' + "./res/characters/" + character_name + "/animations/frames/" + animation_name + "/" + entry.name + '"' + ","
@@ -146,7 +146,7 @@ def generate_for_animation(character_name, animation_name):
 def generate_for_character(character_name):
     generated_character_string = "{"
 
-    with os.scandir("../res/characters/" + character_name + "/animations/frames/") as dirs:
+    with os.scandir("res/characters/" + character_name + "/animations/frames/") as dirs:
         for entry in dirs:
             if(entry.is_dir()):
                 generated_character_string += "\n                " + generate_for_animation(character_name, entry.name) + ","
@@ -155,7 +155,7 @@ def generate_for_character(character_name):
 
 
 def main():
-    print("Generating character texture atlas paths...")
+    print("Generating character texture atlas paths from " + os.getcwd() + " ...")
 
     generated_file = """#include "players/states/state.hpp"
 
@@ -164,7 +164,7 @@ def main():
         // indexed by [player_name][state_name]
         std::map<std::string, std::map<std::string, std::vector<std::string>>>           atlas_map = {"""
 
-    with os.scandir("../res/characters/") as dirs:
+    with os.scandir("res/characters/") as dirs:
         for entry in dirs:
             if(entry.is_dir()):
                 generated_file += "\n            " + generate_for_character(entry.name) + ","
@@ -174,10 +174,10 @@ def main():
 
     #print(generated_file)
 
-    if not os.path.exists('../generated'):
-        os.makedirs('../generated')
+    if not os.path.exists('generated'):
+        os.makedirs('generated')
 
-    with open("../generated/generated_state_atlas.cpp", "w") as f:
+    with open("generated/generated_state_atlas.cpp", "w") as f:
         f.write(generated_file)
    
 
