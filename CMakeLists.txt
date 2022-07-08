@@ -53,7 +53,9 @@ add_executable(Vidyawave_The_Fighter "")
 add_subdirectory(src)
 target_sources(Vidyawave_The_Fighter 
     PRIVATE 
-        ${CMAKE_CURRENT_LIST_DIR}/generated/generated_states.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_atlas.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_hitboxes.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/generated/generated_state_hurtboxes.cpp
 )
 target_include_directories(Vidyawave_The_Fighter PRIVATE include)
 
@@ -135,12 +137,30 @@ endif ()
             ^& IF %ERRORLEVEL% LEQ 1 verify >nul
     )
 
+    add_custom_command(TARGET Vidyawave_The_Fighter PRE_BUILD 
+        COMMAND (python "${PROJECT_SOURCE_DIR}/scripts/atlas_generator.py")
+            ^& IF %ERRORLEVEL% LEQ 1 verify >nul
+    )
+
+    add_custom_command(TARGET Vidyawave_The_Fighter PRE_BUILD 
+        COMMAND (python "${PROJECT_SOURCE_DIR}/scripts/hitbox_generator.py")
+            ^& IF %ERRORLEVEL% LEQ 1 verify >nul
+    )
+
 else ()
 
     add_custom_command(TARGET Vidyawave_The_Fighter POST_BUILD 
         COMMAND cp -r
             "${PROJECT_SOURCE_DIR}/res" 
             $<TARGET_FILE_DIR:Vidyawave_The_Fighter>
+    )
+
+    add_custom_command(TARGET Vidyawave_The_Fighter PRE_BUILD 
+        COMMAND (python3 "${PROJECT_SOURCE_DIR}/scripts/atlas_generator.py")
+    )
+
+    add_custom_command(TARGET Vidyawave_The_Fighter PRE_BUILD 
+        COMMAND (python3 "${PROJECT_SOURCE_DIR}/scripts/hitbox_generator.py")
     )
 
 endif(WIN32)

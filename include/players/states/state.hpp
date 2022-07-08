@@ -1,9 +1,20 @@
 #pragma once
 
 #include "animations/h_animation.hpp"
-#include "players/generated/generated_states.hpp"
 
 #include <functional>
+#include <map>
+#include <string>
+#include <vector>
+
+namespace GeneratedStates
+{
+    // indexed by [player_name][state_name]
+
+    extern std::map<std::string, std::map<std::string, std::vector<std::string>>>           atlas_map;
+    extern std::map<std::string, std::map<std::string, std::vector<std::vector<SDL_Rect>>>> hitbox_map;
+    extern std::map<std::string, std::map<std::string, std::vector<std::vector<SDL_Rect>>>> hurtbox_map;
+}
 
 class State
 {
