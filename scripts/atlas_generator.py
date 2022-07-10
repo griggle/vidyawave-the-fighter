@@ -155,7 +155,7 @@ def generate_for_character(character_name):
 
 
 def main():
-    print("Generating character texture atlas paths from " + os.getcwd() + " ...")
+    #print("Generating character texture atlas paths...")
 
     generated_file = """#include "players/states/state.hpp"
 

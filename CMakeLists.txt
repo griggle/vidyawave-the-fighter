@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # set the project name
 project(Vidyawave_The_Fighter)
 
-add_definitions(-w)
-
 # third party libs
 
 # SDL2
@@ -42,6 +40,12 @@ include_directories(${SDL2_MIXER_INCLUDE_DIRS})
 #######################################################################################################################
 
 add_executable(Vidyawave_The_Fighter "")
+
+if(MSVC)
+  target_compile_options(Vidyawave_The_Fighter PRIVATE /W0)
+else()
+  target_compile_options(Vidyawave_The_Fighter PRIVATE -w)
+endif()
 
 # todo: figure out how do switch builds on debug / release
 #if(CMAKE_BUILD_TYPE EQUAL "Debug")
@@ -133,7 +137,7 @@ endif ()
         COMMAND (robocopy /s /xo 
             "${PROJECT_SOURCE_DIR}/res" 
             $<TARGET_FILE_DIR:Vidyawave_The_Fighter>/res 
-            /xd "files" "__pycache__" /xf "*.py" "*.cmd" "info.png" > nul)
+            /xd "files" "__pycache__" /xf "*.py" "*.cmd" "info.png" "hitbox" "hurtbox" > nul)
             ^& IF %ERRORLEVEL% LEQ 1 verify >nul
     )
 

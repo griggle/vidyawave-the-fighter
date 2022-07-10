@@ -17,7 +17,7 @@ int main (int argc, char * args[])
     Canvas canvas (width, height);
 
     canvas.init ();
-    canvas.set_scene (new GameScene (&canvas, new PlayerJohnDebug(), new PlayerBilly()));
+    canvas.set_scene (new GameScene (&canvas, new PlayerBilly(), new PlayerJohnDebug()));
 
     int   start      = SDL_GetTicks ();
     int   fps_start  = SDL_GetTicks ();
